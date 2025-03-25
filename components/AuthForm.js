@@ -22,28 +22,58 @@ export default function AuthForm({ type }) {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+ const handleSubmit = async (e) => {
+   e.preventDefault();
+   setError("");
 
-    console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-    console.log("Supabase Key:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-    console.log("Supabase Client:", supabase);
-    console.log("Supabase Auth:", supabase.auth);
+   try {
+     if (type === "signup") {
+       const { data, error } = await supabase.auth.signUp({ email, password });
+
+       if (error) {
+         setError(error.message);
+         return;
+       }
+
+       const supabaseUser = data?.user;
+
+       // Just in case something goes wrong
+       if (!supabaseUser) {
+         setError("Signup successful, but no user data returned.");
+         return;
+       }
+
+       // Create user in your own DB
+       await fetch("/api/user/create", {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
+           id: supabaseUser.id,
+           email: supabaseUser.email,
+         }),
+       });
+
+       router.push("/dashboard");
+     } else {
+       const { data, error } = await supabase.auth.signInWithPassword({
+         email,
+         password,
+       });
+
+       if (error) {
+         setError(error.message);
+         return;
+       }
+
+       router.push("/dashboard");
+     }
+   } catch (err) {
+     console.error("Unexpected error:", err);
+     setError("Something went wrong. Please try again.");
+   }
+ };
 
 
-    const fn =
-      type === "signup"
-        ? supabase.auth.signUp
-        : supabase.auth.signInWithPassword;
-    const { data, error } = await fn({ email, password });
-
-    if (error) {
-      setError(error.message);
-    } else {
-      router.push("/dashboard");
-    }
-  };
 
   return (
     <Box sx={{ maxWidth: 400, mx: "auto", mt: 10, px: 2 }}>
