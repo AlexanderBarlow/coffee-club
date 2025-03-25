@@ -1,0 +1,43 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("NEXT_PUBLIC_SUPABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  tier          Tier     @default(BRONZE)
+  points        Int      @default(0)
+  orders        Order[]
+  createdAt     DateTime @default(now())
+}
+
+model Order {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  items     Json
+  total     Float
+  createdAt DateTime @default(now())
+}
+
+model Drink {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  price       Float
+  imageUrl    String?
+  available   Boolean  @default(true)
+}
+
+enum Tier {
+  BRONZE
+  SILVER
+  GOLD
+  VIP
+}
