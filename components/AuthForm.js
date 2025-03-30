@@ -28,33 +28,31 @@ export default function AuthForm({ type }) {
 
    try {
      if (type === "signup") {
-       const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({ email, password });
 
-       if (error) {
-         setError(error.message);
-         return;
-       }
+  if (error) {
+    setError(error.message);
+    return;
+  }
 
-       const supabaseUser = data?.user;
+  // Insert user to DB (optional, since no session yet)
+  const supabaseUser = data?.user;
 
-       // Just in case something goes wrong
-       if (!supabaseUser) {
-         setError("Signup successful, but no user data returned.");
-         return;
-       }
+  if (supabaseUser) {
+    await fetch("/api/user/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: supabaseUser.id,
+        email: supabaseUser.email,
+      }),
+    });
+  }
 
-       // Create user in your own DB
-       await fetch("/api/user/create", {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({
-           id: supabaseUser.id,
-           email: supabaseUser.email,
-         }),
-       });
-
-       router.push("/dashboard");
-     } else {
+  // Redirect to verification screen
+  router.push("/verify");
+  return;
+} else {
        const { data, error } = await supabase.auth.signInWithPassword({
          email,
          password,
@@ -149,6 +147,31 @@ export default function AuthForm({ type }) {
                 {type === "signup" ? "Sign Up" : "Log In"}
               </Button>
             </motion.div>
+            <Box sx={{ mt: 3, textAlign: "center" }}>
+              <Typography variant="body2">
+                {type === "signup" ? (
+                  <>
+                    Already have an account?{" "}
+                    <Button
+                      variant="text"
+                      onClick={() => router.push("/login")}
+                    >
+                      Log in
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    Don't have an account?{" "}
+                    <Button
+                      variant="text"
+                      onClick={() => router.push("/signup")}
+                    >
+                      Sign up
+                    </Button>
+                  </>
+                )}
+              </Typography>
+            </Box>
           </form>
         </Paper>
       </motion.div>
