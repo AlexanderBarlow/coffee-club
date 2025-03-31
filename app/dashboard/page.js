@@ -14,6 +14,8 @@ import {
   Button,
 } from "@mui/material";
 import { motion } from "framer-motion";
+import BottomTabBar from "@/components/MobileNavbar";
+
 
 // Mocked tier levels (you can move this into DB later)
 const tierThresholds = {
@@ -147,6 +149,7 @@ export default function DashboardPage() {
           Sign Out
         </Button>
       </motion.div>
+      <BottomTabBar />
     </Box>
   );
 }
