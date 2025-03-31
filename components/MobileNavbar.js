@@ -45,22 +45,20 @@ export default function BottomTabBar() {
 				sx={{ borderRadius: "inherit", background: "#fff" }}
 			>
 				{navItems.map((item, index) => (
-					<motion.div
+					<BottomNavigationAction
 						key={item.path}
+						label={item.label}
+						icon={item.icon}
+						component={motion.button}
 						whileHover={{ scale: 1.1 }}
 						whileTap={{ scale: 0.95 }}
-						style={{ flex: 1 }}
-					>
-						<BottomNavigationAction
-							label={item.label}
-							icon={item.icon}
-							sx={{
-								"&.Mui-selected": {
-									color: "#6f4e37",
-								},
-							}}
-						/>
-					</motion.div>
+						sx={{
+							"&.Mui-selected": {
+								color: "#6f4e37",
+							},
+							borderRadius: 3,
+						}}
+					/>
 				))}
 			</BottomNavigation>
 		</Paper>

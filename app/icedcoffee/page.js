@@ -61,7 +61,7 @@ export default function IcedCoffeePage() {
                 </CardContent>
               </Card>
             </motion.div>
-            <BottomTabBarButton />
+            <BottomTabBar />
           </Grid>
         ))}
       </Grid>
