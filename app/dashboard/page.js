@@ -24,12 +24,12 @@ const tierThresholds = {
 };
 
 const menuCategories = [
-  { title: "Iced Coffees", emoji: "🧊" },
-  { title: "Hot Coffees", emoji: "☕" },
-  { title: "Espresso", emoji: "⚡" },
-  { title: "Frappes", emoji: "🍧" },
-  { title: "Tea", emoji: "🍵" },
-  { title: "Grub", emoji: "⚡" },
+  { title: "Iced Coffees", emoji: "🧊", link: "/icedcoffee" },
+  { title: "Hot Coffees", emoji: "☕", link: "/hotcoffee" },
+  { title: "Espresso", emoji: "⚡", link: "/espresso" },
+  { title: "Frappes", emoji: "🍧", link: "/frappes" },
+  { title: "Tea", emoji: "🍵", link: "/tea" },
+  { title: "Grub", emoji: "⚡", link: "/grub" },
 ];
 
 export default function DashboardPage() {
@@ -123,6 +123,7 @@ export default function DashboardPage() {
                     minHeight: 100,
                   }}
                   elevation={2}
+                  onClick={() => router.push(category.link)} // Add this
                 >
                   <CardContent>
                     <Typography fontSize={30}>{category.emoji}</Typography>

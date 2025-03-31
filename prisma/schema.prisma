@@ -28,12 +28,14 @@ model Order {
 
 model Drink {
   id          String   @id @default(uuid())
-  name        String
+  name        String   @unique
   description String
   price       Float
   imageUrl    String?
   available   Boolean  @default(true)
+  category    String
 }
+
 
 enum Tier {
   BRONZE
