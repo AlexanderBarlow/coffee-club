@@ -11,6 +11,7 @@ import {
   Grid,
 } from "@mui/material";
 import { motion } from "framer-motion";
+import BottomTabBar from "@/components/MobileNavbar";
 
 export default function IcedCoffeePage() {
   const [drinks, setDrinks] = useState([]);
@@ -60,6 +61,7 @@ export default function IcedCoffeePage() {
                 </CardContent>
               </Card>
             </motion.div>
+            <BottomTabBarButton />
           </Grid>
         ))}
       </Grid>
