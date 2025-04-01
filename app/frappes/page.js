@@ -10,7 +10,7 @@ export default function EspressoPage() {
 
 	useEffect(() => {
 		const fetchDrinks = async () => {
-			const res = await fetch("/api/drinks?category=grub");
+			const res = await fetch("/api/drinks?category=frappes");
 			const data = await res.json();
 			setDrinks(data);
 		};

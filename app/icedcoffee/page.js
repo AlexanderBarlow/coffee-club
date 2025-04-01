@@ -1,73 +1,42 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  CardMedia,
-  Grid,
-} from "@mui/material";
-import { motion } from "framer-motion";
+import { Box, Typography, Grid } from "@mui/material";
+import ProductCard from "@/components/ProductCard";
 import BottomTabBar from "@/components/MobileNavbar";
 
-export default function IcedCoffeePage() {
-  const [drinks, setDrinks] = useState([]);
-  const router = useRouter();
+export default function EspressoPage() {
+	const [drinks, setDrinks] = useState([]);
 
-  useEffect(() => {
-   const fetchDrinks = async () => {
-     const res = await fetch("/api/drinks?category=iced");
-     const data = await res.json();
-     console.log("Fetched drinks:", data); // 👈
-     setDrinks(Array.isArray(data) ? data : []); // 👈 safety fallback
-   };
+	useEffect(() => {
+		const fetchDrinks = async () => {
+			const res = await fetch("/api/drinks?category=iced");
+			const data = await res.json();
+			setDrinks(data);
+		};
 
+		fetchDrinks();
+	}, []);
 
-    fetchDrinks();
-  }, []);
+	const handleCustomize = (drink) => {
+		console.log("Customize clicked for:", drink.name);
+		// Optional: Trigger modal or drawer here
+	};
 
-  return (
-		<Box sx={{ maxWidth: 800, mx: "auto", mt: 4, px: 2, paddingBottom: 10 }}>
+	return (
+		<Box sx={{ px: 2, mt: 4, pb: 10 }}>
 			<Typography variant="h5" fontWeight={600} gutterBottom>
-				🧊 Iced Coffees
+				⚡ Espresso
 			</Typography>
-			<Grid container spacing={3}>
+
+			<Grid container spacing={2}>
 				{drinks.map((drink) => (
-					<Grid item xs={12} sm={6} md={4} key={drink.id}>
-						<motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-							<Card
-								sx={{ borderRadius: 3, cursor: "pointer", }}
-								onClick={() => router.push(`/drink/${drink.id}`)}
-							>
-								{drink.imageUrl && (
-									<CardMedia
-										component="img"
-										image={drink.imageUrl}
-										alt={drink.name}
-										sx={{
-											height: 400,
-											objectFit: "cover", // or "contain"
-										}}
-									/>
-								)}
-								<CardContent>
-									<Typography fontWeight={600}>{drink.name}</Typography>
-									<Typography variant="body2" color="text.secondary">
-										{drink.description}
-									</Typography>
-									<Typography fontWeight={500} sx={{ mt: 1 }}>
-										${drink.price.toFixed(2)}
-									</Typography>
-								</CardContent>
-							</Card>
-						</motion.div>
-						<BottomTabBar />
+					<Grid item xs={12} sm={6} key={drink.name}>
+						<ProductCard drink={drink} onCustomize={handleCustomize} />
 					</Grid>
 				))}
 			</Grid>
+			<BottomTabBar />
 		</Box>
 	);
 }
