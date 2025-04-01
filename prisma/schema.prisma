@@ -31,10 +31,13 @@ model Drink {
   name        String   @unique
   description String
   price       Float
+  category    String
   imageUrl    String?
   available   Boolean  @default(true)
-  category    String
+  featured    Boolean  @default(false) // ✅ NEW FIELD
+  createdAt   DateTime @default(now())
 }
+
 
 
 enum Tier {

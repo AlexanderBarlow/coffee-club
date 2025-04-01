@@ -10,7 +10,7 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
 const navItems = [
 	{ label: "Home", icon: <HomeIcon />, path: "/dashboard" },
-	{ label: "Menu", icon: <LocalCafeIcon />, path: "/icedcoffee" },
+	{ label: "Menu", icon: <LocalCafeIcon />, path: "/menu" },
 	{ label: "Rewards", icon: <EmojiEventsIcon />, path: "/rewards" },
 	{ label: "Profile", icon: <AccountCircleIcon />, path: "/profile" },
 ];
