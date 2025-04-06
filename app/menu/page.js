@@ -10,6 +10,7 @@ import {
 	useTheme,
 } from "@mui/material";
 import { motion } from "framer-motion";
+import BottomTabBar from "@/components/MobileNavbar";
 
 const menuCategories = [
 	{ title: "Iced Coffees", emoji: "🧊", link: "/icedcoffee" },
@@ -90,6 +91,7 @@ export default function MenuPage() {
 								</CardContent>
 							</Card>
 						</motion.div>
+						<BottomTabBar />
 					</Grid>
 				))}
 			</Grid>
