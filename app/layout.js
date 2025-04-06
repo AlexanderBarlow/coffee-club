@@ -11,7 +11,6 @@ export const metadata = {
 		icon: "/favicon.ico",
 		apple: "/icons/icon-192x192.png",
 	},
-	themeColor: "#6f4e37", // gets added to <meta name="theme-color">
 };
 
 export default function RootLayout({ children }) {
