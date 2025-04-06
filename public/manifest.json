@@ -4,6 +4,7 @@
 	"description": "Your personalized coffee experience",
 	"start_url": "/login",
 	"display": "standalone",
+	"scope": "/",
 	"orientation": "portrait",
 	"background_color": "#f9f4f0",
 	"theme_color": "#6f4e37",
