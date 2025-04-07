@@ -47,7 +47,7 @@ export default function ResponsiveNavbar() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const navItems = [
-    { label: "Home", icon: <HomeIcon />, path: "/dashboard" },
+    { label: "Home", icon: <HomeIcon />, path: "/" },
     { label: "Menu", icon: <LocalCafeIcon />, path: "/menu" },
   ];
 
@@ -99,7 +99,7 @@ export default function ResponsiveNavbar() {
 
   const toggleDrawer = () => setDrawerOpen((prev) => !prev);
 
-  if (["/login", "/signup", "/verify"].includes(pathname)) return null;
+  if (["/verify"].includes(pathname)) return null;
 
   const displayedItems = isAuthenticated ? authNavItems : navItems;
 
