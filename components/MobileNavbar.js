@@ -15,10 +15,12 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import HomeIcon from "@mui/icons-material/Home";
-import LocalCafeIcon from "@mui/icons-material/LocalCafe";
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import HomeIcon from "@mui/icons-material/HomeRounded";
+import LocalCafeIcon from "@mui/icons-material/LocalCafeRounded";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEventsRounded";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCartRounded";
+import LogoutIcon from "@mui/icons-material/LogoutRounded";
+import { supabase } from "@/lib/supabaseClient";
 
 const getCartItemCount = () => {
   if (typeof window !== "undefined") {

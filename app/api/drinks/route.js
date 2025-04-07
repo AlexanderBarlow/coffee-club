@@ -8,13 +8,15 @@ export async function GET(req) {
 
 	try {
 		const drinks = await prisma.drink.findMany({
-			where: {
-				category: category, // ✅ No need to wrap in `equals: { category }`
-			},
+			where: category ? { category } : {}, // ✅ Only apply filter if category exists
 		});
 
-		return new Response(JSON.stringify(drinks), { status: 200 });
+		return new Response(JSON.stringify(drinks), {
+			status: 200,
+			headers: { "Content-Type": "application/json" },
+		});
 	} catch (err) {
+		console.error("❌ Failed to fetch drinks:", err);
 		return new Response(JSON.stringify({ error: err.message }), {
 			status: 500,
 		});

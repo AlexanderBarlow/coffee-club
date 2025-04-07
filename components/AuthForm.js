@@ -1,4 +1,3 @@
-// components/AuthForm.js
 "use client";
 
 import { useState } from "react";
@@ -22,14 +21,25 @@ export default function AuthForm({ type }) {
 	const [error, setError] = useState("");
 	const router = useRouter();
 
+	const createUserIfNotExists = async (id, email) => {
+		try {
+			await fetch("/api/user/create", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ id, email }),
+			});
+		} catch (err) {
+			console.error("❌ Failed to sync user with DB:", err);
+		}
+	};
+
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		setError("");
 
 		try {
 			if (type === "signup") {
-				await supabase.auth.signOut();
-
+				await supabase.auth.signOut(); // clear any lingering session
 				const { data, error } = await supabase.auth.signUp({ email, password });
 
 				if (error) {
@@ -37,22 +47,33 @@ export default function AuthForm({ type }) {
 					return;
 				}
 
-				// Insert user to DB (optional, since no session yet)
-
-				// Redirect to verification screen
-				router.push("/verify");
+				router.push("/verify"); // Wait for email confirmation
 				return;
+			}
+
+			// LOGIN
+			const { data: authData, error } = await supabase.auth.signInWithPassword({
+				email,
+				password,
+			});
+
+			if (error) {
+				setError(error.message);
+				return;
+			}
+
+			const userId = authData.user?.id;
+			const userEmail = authData.user?.email;
+
+			await createUserIfNotExists(userId, userEmail);
+
+			// Check if user is an admin
+			const res = await fetch(`/api/user/${userId}`);
+			const user = await res.json();
+
+			if (user?.isAdmin) {
+				router.push("/admin");
 			} else {
-				const { data, error } = await supabase.auth.signInWithPassword({
-					email,
-					password,
-				});
-
-				if (error) {
-					setError(error.message);
-					return;
-				}
-
 				router.push("/dashboard");
 			}
 		} catch (err) {
@@ -135,6 +156,7 @@ export default function AuthForm({ type }) {
 								{type === "signup" ? "Sign Up" : "Log In"}
 							</Button>
 						</motion.div>
+
 						<Box sx={{ mt: 3, textAlign: "center" }}>
 							<Typography variant="body2">
 								{type === "signup" ? (
