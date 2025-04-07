@@ -1,42 +1,76 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Box, Typography, Grid } from "@mui/material";
+import { Box, Typography, Container } from "@mui/material";
 import ProductCard from "@/components/ProductCard";
 import BottomTabBar from "@/components/MobileNavbar";
 
 export default function EspressoPage() {
-	const [drinks, setDrinks] = useState([]);
+  const [drinks, setDrinks] = useState([]);
 
-	useEffect(() => {
-		const fetchDrinks = async () => {
-			const res = await fetch("/api/drinks?category=espresso");
-			const data = await res.json();
-			setDrinks(data);
-		};
+  useEffect(() => {
+    const fetchDrinks = async () => {
+      const res = await fetch("/api/drinks?category=espresso");
+      const data = await res.json();
+      setDrinks(data);
+    };
+    fetchDrinks();
+  }, []);
 
-		fetchDrinks();
-	}, []);
+  const handleCustomize = (drink) => {
+    console.log("Customize clicked for:", drink.name);
+  };
 
-	const handleCustomize = (drink) => {
-		console.log("Customize clicked for:", drink.name);
-		// Optional: Trigger modal or drawer here
-	};
+  return (
+    <>
+      <Container
+        maxWidth="md"
+        sx={{
+          minHeight: "100vh",
+          paddingBottom: 10,
+          pt: { xs: 6, sm: 8 },
+          backgroundColor: "#fef8f2", // Cream background
+        }}
+      >
+        <Typography
+          variant="h4"
+          fontWeight={700}
+          sx={{
+            mb: 3,
+            textAlign: { xs: "center", sm: "left" },
+            color: "#6f4e37",
+          }}
+        >
+          ⚡ Espresso
+        </Typography>
 
-	return (
-		<Box sx={{ px: 2, mt: 4, pb: 10 }}>
-			<Typography variant="h5" fontWeight={600} gutterBottom>
-				⚡ Espresso
-			</Typography>
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 3,
+            justifyContent: { xs: "center", sm: "flex-start" },
+          }}
+        >
+          {drinks.map((drink) => (
+            <Box
+              key={drink.name}
+              sx={{
+                width: {
+                  xs: "100%",
+                  sm: "calc(50% - 12px)",
+                  md: "calc(33.333% - 16px)",
+                },
+                display: "flex",
+              }}
+            >
+              <ProductCard drink={drink} onCustomize={handleCustomize} />
+            </Box>
+          ))}
+        </Box>
+      </Container>
 
-			<Grid container spacing={2}>
-				{drinks.map((drink) => (
-					<Grid item xs={12} sm={6} key={drink.name}>
-						<ProductCard drink={drink} onCustomize={handleCustomize} />
-					</Grid>
-				))}
-			</Grid>
-			<BottomTabBar />
-		</Box>
-	);
+      <BottomTabBar />
+    </>
+  );
 }

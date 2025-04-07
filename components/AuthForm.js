@@ -34,53 +34,57 @@ export default function AuthForm({ type }) {
 	};
 
 	const handleSubmit = async (e) => {
-		e.preventDefault();
-		setError("");
+    e.preventDefault();
+    setError("");
 
-		try {
-			if (type === "signup") {
-				await supabase.auth.signOut(); // clear any lingering session
-				const { data, error } = await supabase.auth.signUp({ email, password });
+    try {
+      if (type === "signup") {
+        await supabase.auth.signOut(); // clear any lingering session
 
-				if (error) {
-					setError(error.message);
-					return;
-				}
+        const { data, error } = await supabase.auth.signUp({ email, password });
 
-				router.push("/verify"); // Wait for email confirmation
-				return;
-			}
+        if (error) {
+          setError(error.message);
+          return;
+        }
 
-			// LOGIN
-			const { data: authData, error } = await supabase.auth.signInWithPassword({
-				email,
-				password,
-			});
+        // ✅ Only create user in your DB after Supabase signup
+        if (data?.user) {
+          await createUserIfNotExists(data.user.id, data.user.email);
+        }
 
-			if (error) {
-				setError(error.message);
-				return;
-			}
+        router.push("/verify"); // Wait for email confirmation
+        return;
+      }
 
-			const userId = authData.user?.id;
-			const userEmail = authData.user?.email;
+      // LOGIN
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-			await createUserIfNotExists(userId, userEmail);
+      if (error) {
+        setError(error.message);
+        return;
+      }
 
-			// Check if user is an admin
-			const res = await fetch(`/api/user/${userId}`);
-			const user = await res.json();
+      const userId = authData.user?.id;
 
-			if (user?.isAdmin) {
-				router.push("/admin");
-			} else {
-				router.push("/dashboard");
-			}
-		} catch (err) {
-			console.error("Unexpected error:", err);
-			setError("Something went wrong. Please try again.");
-		}
-	};
+      // ✅ No need to create user here
+      const res = await fetch(`/api/user/${userId}`);
+      const user = await res.json();
+
+      if (user?.isAdmin) {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      setError("Something went wrong. Please try again.");
+    }
+  };
+
 
 	return (
 		<Box sx={{ maxWidth: 400, mx: "auto", mt: 10, px: 2 }}>
