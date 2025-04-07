@@ -2,7 +2,7 @@
 	"name": "Coffee Club",
 	"short_name": "CoffeeClub",
 	"description": "Your personalized coffee experience",
-	"start_url": "/login",
+	"start_url": "/",
 	"display": "standalone",
 	"scope": "/",
 	"orientation": "portrait",

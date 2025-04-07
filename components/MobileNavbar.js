@@ -1,20 +1,26 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { usePathname, useRouter } from "next/navigation";
 import {
-  Paper,
-  Badge,
-  BottomNavigation,
-  BottomNavigationAction,
   AppBar,
   Toolbar,
   IconButton,
   Button,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  ListItemButton,
+  Divider,
+  Badge,
   useMediaQuery,
   useTheme,
+  Box,
+  Typography,
 } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/HomeRounded";
 import LocalCafeIcon from "@mui/icons-material/LocalCafeRounded";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEventsRounded";
@@ -35,11 +41,18 @@ export default function ResponsiveNavbar() {
   const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   const [cartCount, setCartCount] = useState(0);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const navItems = [
     { label: "Home", icon: <HomeIcon />, path: "/dashboard" },
     { label: "Menu", icon: <LocalCafeIcon />, path: "/menu" },
+  ];
+
+  const authNavItems = [
+    ...navItems,
     { label: "Rewards", icon: <EmojiEventsIcon />, path: "/rewards" },
     {
       label: "Cart",
@@ -58,96 +71,116 @@ export default function ResponsiveNavbar() {
 
   useEffect(() => {
     setCartCount(getCartItemCount());
+
+    const checkAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+
+    checkAuth();
+
     const handleStorage = () => setCartCount(getCartItemCount());
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
-  const activeIndex = Math.max(
-    navItems.findIndex((item) => pathname.startsWith(item.path)),
-    0
-  );
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setDrawerOpen(false);
+    router.push("/login");
+  };
 
-  // Hide nav on auth pages
+  const navTo = (path) => {
+    setDrawerOpen(false);
+    router.push(path);
+  };
+
+  const toggleDrawer = () => setDrawerOpen((prev) => !prev);
+
   if (["/login", "/signup", "/verify"].includes(pathname)) return null;
 
-  if (isMobile) {
-    return (
-      <Paper
-        elevation={6}
+  const displayedItems = isAuthenticated ? authNavItems : navItems;
+
+  return (
+    <>
+      <AppBar
+        position="fixed"
         sx={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 1000,
-          borderTopLeftRadius: 16,
-          borderTopRightRadius: 16,
+          backgroundColor: "#fff",
+          boxShadow: "none",
+          borderBottom: "1px solid #ddd",
+          zIndex: 1201,
         }}
       >
-        <BottomNavigation
-          showLabels
-          value={activeIndex}
-          onChange={(event, newValue) => {
-            router.push(navItems[newValue].path);
-          }}
-          sx={{ borderRadius: "inherit", background: "#fff" }}
-        >
-          {navItems.map((item) => (
-            <BottomNavigationAction
-              key={item.path}
-              label={item.label}
-              icon={item.icon}
-              component={motion.button}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              sx={{
-                "&.Mui-selected": {
-                  color: "#6f4e37",
-                },
-                borderRadius: 3,
-              }}
-            />
+        <Toolbar sx={{ justifyContent: "space-between" }}>
+          {isMobile ? (
+            <>
+              <IconButton edge="start" onClick={toggleDrawer}>
+                <MenuIcon sx={{ color: "#6f4e37" }} />
+              </IconButton>
+              <Typography variant="h6" fontWeight={700} color="primary">
+                Coffee Club
+              </Typography>
+              <Box width={48} />
+            </>
+          ) : (
+            <>
+              <Box>
+                {displayedItems.map((item) => (
+                  <Button
+                    key={item.path}
+                    onClick={() => router.push(item.path)}
+                    sx={{
+                      color: pathname.startsWith(item.path)
+                        ? "#6f4e37"
+                        : "#888",
+                      textTransform: "none",
+                      fontWeight: 600,
+                      mr: 2,
+                    }}
+                  >
+                    {item.label}
+                  </Button>
+                ))}
+              </Box>
+              {isAuthenticated && (
+                <IconButton onClick={handleLogout}>
+                  <LogoutIcon sx={{ color: "#6f4e37" }} />
+                </IconButton>
+              )}
+            </>
+          )}
+        </Toolbar>
+      </AppBar>
+      {/* Mobile Drawer */}
+      <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer}>
+        <List sx={{ width: 250 }}>
+          {displayedItems.map((item) => (
+            <ListItem key={item.path} disablePadding>
+              <ListItemButton onClick={() => navTo(item.path)}>
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.label} />
+              </ListItemButton>
+            </ListItem>
           ))}
-        </BottomNavigation>
-      </Paper>
-    );
-  }
-
-  // Desktop Navbar
-  return (
-    <AppBar
-      position="static"
-      sx={{
-        backgroundColor: "#fff",
-        boxShadow: "none",
-        borderBottom: "1px solid #ddd",
-      }}
-    >
-      <Toolbar sx={{ justifyContent: "space-between" }}>
-        <div>
-          {navItems.slice(0, 3).map((item) => (
-            <Button
-              key={item.path}
-              onClick={() => router.push(item.path)}
-              sx={{
-                color: pathname.startsWith(item.path) ? "#6f4e37" : "#888",
-                textTransform: "none",
-                fontWeight: 600,
-                mr: 2,
-              }}
-            >
-              {item.label}
-            </Button>
-          ))}
-        </div>
-
-        <IconButton onClick={() => router.push("/cart")}>
-          <Badge badgeContent={cartCount} color="error">
-            <ShoppingCartIcon sx={{ color: "#6f4e37" }} />
-          </Badge>
-        </IconButton>
-      </Toolbar>
-    </AppBar>
+          {isAuthenticated && (
+            <>
+              <Divider />
+              <ListItem disablePadding>
+                <ListItemButton onClick={handleLogout}>
+                  <ListItemIcon>
+                    <LogoutIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Logout" />
+                </ListItemButton>
+              </ListItem>
+            </>
+          )}
+        </List>
+      </Drawer>
+      <Toolbar /> {/* Push page content down below AppBar */}
+    </>
   );
 }

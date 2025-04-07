@@ -7,7 +7,6 @@ import Link from "next/link";
 import { Box, Typography } from "@mui/material";
 import BottomTabBar from "@/components/MobileNavbar";
 
-
 const steps = [
   {
     title: "Select Your Style",
@@ -37,41 +36,60 @@ export default function LandingPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#fff9f6] to-[#fefefe] text-[#3e3028]">
       <BottomTabBar />
-      {/* Hero Section */}
-      <section className="text-center py-20 px-4 max-w-4xl mx-auto">
+
+      {/* Hero */}
+      <section className="relative text-center py-24 px-4 max-w-4xl mx-auto overflow-hidden">
         <motion.h1
-          className="text-4xl sm:text-5xl font-bold mb-6"
+          className="text-5xl sm:text-6xl font-bold mb-6 z-10 relative"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
         >
           Welcome to Coffee Club ☕
         </motion.h1>
+
         <motion.p
-          className="text-lg sm:text-xl text-gray-600 mb-8"
+          className="text-xl sm:text-2xl text-gray-600 mb-10 z-10 relative"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          Your new favorite spot for personalized coffee experiences.
+          Your personalized coffee experience, one cup at a time.
         </motion.p>
+
         <motion.div
-          className="flex justify-center gap-4"
+          className="flex justify-center gap-5 z-10 relative"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
           <Link href="/signup">
-            <Button className="rounded-full px-6 py-2 text-lg">Sign Up</Button>
+            <Button className="rounded-full px-6 py-2 text-lg shadow-lg hover:shadow-2xl hover:brightness-105 transition">
+              Sign Up
+            </Button>
           </Link>
           <Link href="/login">
             <Button
               variant="outline"
-              className="rounded-full px-6 py-2 text-lg"
+              className="rounded-full px-6 py-2 text-lg border-[#6f4e37] hover:bg-[#6f4e37]/10 transition"
             >
               Log In
             </Button>
           </Link>
+        </motion.div>
+
+        <motion.div
+          className="absolute bottom-[-20px] right-[-40px] opacity-10 pointer-events-none"
+          animate={{ y: [0, -10, 0] }}
+          transition={{ repeat: Infinity, duration: 6 }}
+        >
+          <Image
+            src="/images/caramel-cloud.jpg"
+            alt="Hero cup"
+            width={300}
+            height={300}
+            className="rounded-full"
+          />
         </motion.div>
       </section>
 
@@ -85,8 +103,8 @@ export default function LandingPage() {
             {[1, 2, 3].map((id) => (
               <motion.div
                 key={id}
-                whileHover={{ scale: 1.03 }}
-                className="bg-white p-4 rounded-2xl shadow"
+                whileHover={{ scale: 1.05, rotate: [-1, 1, 0] }}
+                className="bg-white p-4 rounded-2xl shadow transition-all duration-300"
               >
                 <Image
                   src={`/images/caramel-cloud.jpg`}
@@ -108,7 +126,7 @@ export default function LandingPage() {
       </section>
 
       {/* User Reviews */}
-      <section className="py-16 px-4 bg-[#fff]">
+      <section className="py-16 px-4 bg-white">
         <div className="max-w-5xl mx-auto text-center">
           <Typography variant="h5" fontWeight={600} gutterBottom>
             💬 What Our Users Say
@@ -122,7 +140,7 @@ export default function LandingPage() {
               <motion.div
                 key={idx}
                 className="bg-[#f9f9f9] rounded-2xl p-5 shadow"
-                whileHover={{ y: -5 }}
+                whileHover={{ y: -5, scale: 1.02 }}
               >
                 <p className="text-gray-700 italic">“{quote}”</p>
                 <p className="text-sm text-gray-500 mt-2">
@@ -134,28 +152,28 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Unique Coffee Offering */}
+      {/* Coffee Journey */}
       <section className="py-20 px-4 bg-[#6f4e37] text-white">
         <div className="max-w-3xl mx-auto text-center mb-12">
           <Typography variant="h4" fontWeight={700} gutterBottom>
-            🔥 Unique Coffee Journey
+            🔥 Your Coffee Journey
           </Typography>
           <p className="text-lg text-neutral-200">
-            From beans to brew, here's how we craft your perfect cup.
+            From beans to brew, we personalize every sip just for you.
           </p>
         </div>
 
-        <div className="relative max-w-2xl mx-auto border-l border-white/30 pl-6 space-y-10">
+        <div className="relative max-w-2xl mx-auto border-l-4 border-white/20 pl-6 space-y-12">
           {steps.map((step, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.2, duration: 0.5 }}
+              transition={{ delay: i * 0.2 }}
               viewport={{ once: true }}
               className="relative pl-10"
             >
-              <div className="absolute left-[-20px] top-1 bg-white text-[#6f4e37] w-10 h-10 flex items-center justify-center rounded-full text-xl font-bold shadow-md">
+              <div className="absolute left-[-26px] top-1 bg-white text-[#6f4e37] w-10 h-10 flex items-center justify-center rounded-full text-xl font-bold shadow-md border-2 border-[#6f4e37]">
                 {step.emoji}
               </div>
               <h3 className="text-lg font-semibold">{step.title}</h3>
