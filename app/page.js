@@ -4,8 +4,12 @@ import Button from "@/components/Button";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, IconButton } from "@mui/material";
 import BottomTabBar from "@/components/MobileNavbar";
+import { useKeenSlider } from "keen-slider/react";
+import "keen-slider/keen-slider.min.css";
+import { useEffect, useRef } from "react";
+import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 
 const steps = [
   {
@@ -33,6 +37,34 @@ const steps = [
 ];
 
 export default function LandingPage() {
+
+    const sliderRef = useRef(null);
+
+    const [sliderInstanceRef, slider] = useKeenSlider({
+      loop: true,
+      mode: "snap",
+      slides: {
+        perView: 1.2,
+        spacing: 16,
+      },
+      breakpoints: {
+        "(min-width: 640px)": {
+          slides: { perView: 2.25, spacing: 20 },
+        },
+        "(min-width: 1024px)": {
+          slides: { perView: 3, spacing: 24 },
+        },
+      },
+    });
+
+    const scrollLeft = () => {
+      if (slider) slider.current?.prev();
+    };
+
+    const scrollRight = () => {
+      if (slider) slider.current?.next();
+    };
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#fff9f6] to-[#fefefe] text-[#3e3028]">
       <BottomTabBar />
@@ -93,60 +125,91 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Featured Coffees */}
-      <section className="bg-[#f3f1ee] py-14 px-4">
-        <div className="max-w-5xl mx-auto">
-          <Typography variant="h5" fontWeight={600} gutterBottom>
-            🌟 Featured Coffees
+      <section className="bg-[#f3f1ee] py-16 px-4">
+        <div className="max-w-5xl mx-auto text-center">
+          <Typography variant="h5" fontWeight={700} gutterBottom>
+            🌿 Why We're Different
           </Typography>
-          <div className="grid sm:grid-cols-3 gap-6 mt-6">
-            {[1, 2, 3].map((id) => (
+          <Typography variant="body1" className="text-gray-600 mb-8">
+            Coffee Club is committed to quality ingredients and local
+            partnerships.
+          </Typography>
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {[
+              {
+                title: "Raw Dairy",
+                desc: "Unprocessed & fresh from local farms 🥛",
+              },
+              {
+                title: "Daily Fresh Roasts",
+                desc: "Roasted every morning for peak flavor ☀️",
+              },
+              {
+                title: "Organic Products",
+                desc: "Free from additives and chemicals 🌱",
+              },
+              {
+                title: "Locally Sourced",
+                desc: "Supporting small nearby businesses 🏡",
+              },
+              {
+                title: "Fresh Deliveries",
+                desc: "Daily milk and pastry restocks 🚚",
+              },
+              { title: "Custom Blends", desc: "Made to match your vibe 🎨" },
+            ].map((item, idx) => (
               <motion.div
-                key={id}
-                whileHover={{ scale: 1.05, rotate: [-1, 1, 0] }}
-                className="bg-white p-4 rounded-2xl shadow transition-all duration-300"
+                key={idx}
+                className="bg-white p-5 rounded-xl shadow-md"
+                whileHover={{ scale: 1.03 }}
               >
-                <Image
-                  src={`/images/caramel-cloud.jpg`}
-                  alt={`Coffee ${id}`}
-                  width={300}
-                  height={200}
-                  className="rounded-xl object-cover w-full h-40"
-                />
-                <h4 className="font-semibold text-lg mt-3">
-                  Deluxe Brew #{id}
-                </h4>
-                <p className="text-sm text-gray-500 mt-1">
-                  A rich, smooth blend brewed to perfection.
-                </p>
+                <h4 className="font-semibold text-lg mb-1">{item.title}</h4>
+                <p className="text-sm text-gray-500">{item.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* User Reviews */}
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-5xl mx-auto text-center">
+      {/* 🌟 Featured Coffees Carousel */}
+      <section className="bg-[#f3f1ee] py-14 px-4">
+        <div className="max-w-6xl mx-auto relative">
           <Typography variant="h5" fontWeight={600} gutterBottom>
-            💬 What Our Users Say
+            🌟 Featured Coffees
           </Typography>
-          <div className="grid sm:grid-cols-3 gap-6 mt-6">
-            {[
-              "Best coffee rewards app ever!",
-              "Smooth design & easy to use.",
-              "I never miss my morning brew!",
-            ].map((quote, idx) => (
-              <motion.div
-                key={idx}
-                className="bg-[#f9f9f9] rounded-2xl p-5 shadow"
-                whileHover={{ y: -5, scale: 1.02 }}
-              >
-                <p className="text-gray-700 italic">“{quote}”</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  - Happy User #{idx + 1}
-                </p>
-              </motion.div>
+
+          {/* Arrows */}
+          <div className="hidden lg:flex absolute top-[50%] -translate-y-1/2 left-[-30px] z-10">
+            <IconButton onClick={scrollLeft}>
+              <ChevronLeft fontSize="large" />
+            </IconButton>
+          </div>
+          <div className="hidden lg:flex absolute top-[50%] -translate-y-1/2 right-[-30px] z-10">
+            <IconButton onClick={scrollRight}>
+              <ChevronRight fontSize="large" />
+            </IconButton>
+          </div>
+
+          {/* Slider */}
+          <div ref={sliderInstanceRef} className="keen-slider mt-6">
+            {[1, 2, 3, 4, 5].map((id) => (
+              <div key={id} className="keen-slider__slide px-1">
+                <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col h-full">
+                  <Image
+                    src="/images/caramel-cloud.jpg"
+                    alt={`Coffee ${id}`}
+                    width={300}
+                    height={200}
+                    className="w-full h-48 object-cover"
+                  />
+                  <div className="p-4 flex flex-col justify-between flex-grow">
+                    <h4 className="font-semibold text-lg">Deluxe Brew #{id}</h4>
+                    <p className="text-sm text-gray-500 mt-1 flex-grow">
+                      A rich, smooth blend brewed to perfection.
+                    </p>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -182,6 +245,33 @@ export default function LandingPage() {
               </p>
             </motion.div>
           ))}
+        </div>
+      </section>
+
+      {/* User Reviews */}
+      <section className="py-16 px-4 bg-white">
+        <div className="max-w-5xl mx-auto text-center">
+          <Typography variant="h5" fontWeight={600} gutterBottom>
+            💬 What Our Users Say
+          </Typography>
+          <div className="grid sm:grid-cols-3 gap-6 mt-6">
+            {[
+              "Best coffee rewards app ever!",
+              "Smooth design & easy to use.",
+              "I never miss my morning brew!",
+            ].map((quote, idx) => (
+              <motion.div
+                key={idx}
+                className="bg-[#f9f9f9] rounded-2xl p-5 shadow"
+                whileHover={{ y: -5, scale: 1.02 }}
+              >
+                <p className="text-gray-700 italic">“{quote}”</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  - Happy User #{idx + 1}
+                </p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
     </main>
