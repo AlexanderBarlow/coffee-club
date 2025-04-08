@@ -25,6 +25,7 @@ export default function EspressoPage() {
 
 	return (
 		<Box sx={{ px: 2, mt: 4, pb: 10 }}>
+			<BottomTabBar />
 			<Typography variant="h5" fontWeight={600} gutterBottom>
 				⚡ Espresso
 			</Typography>
@@ -36,7 +37,6 @@ export default function EspressoPage() {
 					</Grid>
 				))}
 			</Grid>
-			<BottomTabBar />
 		</Box>
 	);
 }
