@@ -25,7 +25,7 @@ export default function RootLayout({ children }) {
         <meta name="application-name" content="Coffee Club" />
         <meta name="theme-color" content="#6f4e37" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
 
