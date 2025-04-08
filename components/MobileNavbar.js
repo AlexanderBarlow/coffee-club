@@ -106,7 +106,7 @@ export default function ResponsiveNavbar() {
   return (
     <>
       <AppBar
-        position="fixed"
+        position="relative"
         sx={{
           backgroundColor: "#fff",
           boxShadow: "none",
