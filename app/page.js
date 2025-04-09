@@ -111,12 +111,12 @@ export default function LandingPage() {
         </motion.div>
 
         <motion.div
-          className="absolute bottom-[-20px] right-[-40px] opacity-10 pointer-events-none"
+          className="absolute top-[-20px] right-[-5px] opacity-10 pointer-events-none"
           animate={{ y: [0, -10, 0] }}
           transition={{ repeat: Infinity, duration: 6 }}
         >
           <Image
-            src="/images/caramel-cloud.jpg"
+            src="/images/display.png"
             alt="Hero cup"
             width={300}
             height={300}
