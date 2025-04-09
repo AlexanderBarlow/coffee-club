@@ -9,18 +9,18 @@ export async function GET() {
 			where: { featured: true },
 		});
 
-		if (drinks.length === 0) {
+		if (!drinks || drinks.length === 0) {
 			return NextResponse.json(
-				{ error: "No featured drink found." },
+				{ error: "No featured drinks found." },
 				{ status: 404 }
 			);
 		}
 
-		return NextResponse.json(drinks[0]); // 👈 or send back the array if you want multiple
+		return NextResponse.json(drinks); // ✅ Return the full array
 	} catch (error) {
-		console.error("❌ Error fetching featured drink:", error);
+		console.error("❌ Error fetching featured drinks:", error);
 		return NextResponse.json(
-			{ error: "Unable to fetch featured drink." },
+			{ error: "Unable to fetch featured drinks." },
 			{ status: 500 }
 		);
 	}
