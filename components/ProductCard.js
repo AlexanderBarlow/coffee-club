@@ -1,17 +1,35 @@
 "use client";
 
 import {
-	Card,
-	CardMedia,
-	CardContent,
-	Typography,
-	Button,
-	Box,
+  Card,
+  CardContent,
+  CardMedia,
+  Typography,
+  Button,
+  Box,
 } from "@mui/material";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
+
 
 export default function ProductCard({ drink, onCustomize }) {
-	return (
+
+const router = useRouter();
+
+const handleCustomizeClick = async () => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    router.push("/login");
+  } else {
+    router.push(`/customize/${drink.id}`);
+  }
+};
+
+  return (
 		<motion.div
 			whileHover={{ scale: 1.02, boxShadow: "0 12px 24px rgba(0,0,0,0.15)" }}
 			transition={{ type: "spring", stiffness: 200, damping: 20 }}
@@ -70,7 +88,7 @@ export default function ProductCard({ drink, onCustomize }) {
 							${drink.price.toFixed(2)}
 						</Typography>
 						<Button
-							onClick={() => onCustomize(drink)}
+							onClick={() => handleCustomizeClick(drink)}
 							size="small"
 							variant="outlined"
 							sx={{
