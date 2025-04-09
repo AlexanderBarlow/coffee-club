@@ -156,7 +156,7 @@ export default function ResponsiveNavbar() {
       </AppBar>
       {/* Mobile Drawer */}
       <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer}>
-        <List sx={{ width: 250 }}>
+        <List sx={{ width: 250, paddingTop: 8 }}>
           {displayedItems.map((item) => (
             <ListItem key={item.path} disablePadding>
               <ListItemButton onClick={() => navTo(item.path)}>
