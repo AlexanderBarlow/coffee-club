@@ -32,6 +32,7 @@ async function main() {
       price: 4.75,
       category: "iced",
       imageUrl: "/images/caramel-macchiato.png",
+      featured: true,
     },
     {
       name: "Caramel Cloud Cold Brew",
@@ -49,21 +50,21 @@ async function main() {
       description: "Smooth and bold hot coffee brewed fresh.",
       price: 2.75,
       category: "hot",
-      imageUrl: "/images/hot-coffee.jpg",
+      imageUrl: "/images/classic-hot.png",
     },
     {
       name: "Caramel Latte",
       description: "Steamed milk with espresso and caramel syrup.",
       price: 4.5,
       category: "hot",
-      imageUrl: "/images/caramel-latte.jpg",
+      imageUrl: "/images/caramel-latte.png",
     },
     {
       name: "Cappuccino",
       description: "Espresso with thick milk foam on top.",
       price: 4.0,
       category: "hot",
-      imageUrl: "/images/cappuccino.jpg",
+      imageUrl: "/images/cappucino.png",
     },
 
     // ⚡ Espresso
@@ -72,14 +73,14 @@ async function main() {
       description: "Intense and rich espresso shot.",
       price: 2.25,
       category: "espresso",
-      imageUrl: "/images/espresso.jpg",
+      imageUrl: "/images/single-espresso.png",
     },
     {
       name: "Doppio",
       description: "Double shot of rich espresso.",
       price: 2.95,
       category: "espresso",
-      imageUrl: "/images/doppio.jpg",
+      imageUrl: "/images/doppio.png",
     },
 
     // 🍧 Frappes
@@ -88,14 +89,15 @@ async function main() {
       description: "Frozen blended coffee with chocolate flavor.",
       price: 4.95,
       category: "frappes",
-      imageUrl: "/images/mocha-frappe.jpg",
+      imageUrl: "/images/mocha-frappe.png",
+      featured: true,
     },
     {
       name: "Vanilla Frappe",
       description: "Frozen frappe blended with vanilla sweetness.",
       price: 4.85,
       category: "frappes",
-      imageUrl: "/images/vanilla-frappe.jpg",
+      imageUrl: "/images/vanilla-frappe.png",
     },
 
     // 🍵 Tea
@@ -104,14 +106,14 @@ async function main() {
       description: "Black tea infused with spices and steamed milk.",
       price: 3.95,
       category: "tea",
-      imageUrl: "/images/chai-tea.jpg",
+      imageUrl: "/images/chai-tea.png",
     },
     {
       name: "Green Tea",
       description: "Fresh brewed green tea rich in antioxidants.",
       price: 2.5,
       category: "tea",
-      imageUrl: "/images/green-tea.jpg",
+      imageUrl: "/images/green-tea.png",
     },
 
     // 🍽️ Grub
@@ -120,14 +122,14 @@ async function main() {
       description: "Egg, cheese and bacon on a warm biscuit.",
       price: 5.25,
       category: "grub",
-      imageUrl: "/images/breakfast-sandwich.jpg",
+      imageUrl: "/images/breakfast-sandwich.png",
     },
     {
       name: "Blueberry Muffin",
       description: "Soft muffin filled with juicy blueberries.",
       price: 2.95,
       category: "grub",
-      imageUrl: "/images/blueberry-muffin.jpg",
+      imageUrl: "/images/blueberry-muffin.png",
     },
   ];
 

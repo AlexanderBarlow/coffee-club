@@ -11,22 +11,29 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  Slider,
   TextField,
   Divider,
   Paper,
+  ToggleButtonGroup,
+  ToggleButton,
+  useMediaQuery,
 } from "@mui/material";
 import { supabase } from "@/lib/supabaseClient";
+import Image from "next/image";
 
 export default function CustomizePage() {
   const { id } = useParams();
   const router = useRouter();
+  const isMobile = useMediaQuery("(max-width:600px)");
+
   const [drink, setDrink] = useState(null);
   const [loading, setLoading] = useState(true);
   const [customization, setCustomization] = useState({
     milk: "Whole",
-    sweetness: 50,
+    syrup: "",
+    sauce: "",
     extraShots: 0,
+    size: "M",
     notes: "",
   });
 
@@ -78,48 +85,157 @@ export default function CustomizePage() {
   }
 
   return (
-    <Box sx={{ px: 2, py: 4, maxWidth: 600, mx: "auto" }}>
-      <Typography variant="h4" fontWeight={700} gutterBottom>
-        Customize Your {drink.name}
-      </Typography>
+    <Box sx={{ px: 2, py: 4, maxWidth: 800, mx: "auto" }}>
+      <Paper
+        elevation={3}
+        sx={{ p: 3, borderRadius: 4, background: "#fffefc" }}
+      >
+        {/* Image & Title */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            gap: 3,
+            mb: 3,
+          }}
+        >
+          <Box sx={{ flex: 1 }}>
+            <Typography
+              variant="h4"
+              fontWeight={700}
+              gutterBottom
+              sx={{ color: "#6f4e37" }}
+            >
+              {drink.name}
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              {drink.description}
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              position: "relative",
+              width: { xs: "100%", sm: 200 },
+              height: { xs: 180, sm: 200 },
+              borderRadius: 3,
+              overflow: "hidden",
+              flexShrink: 0,
+              mx: { xs: "auto", sm: 0 },
+            }}
+          >
+            <Image
+              src={drink.imageUrl || "/images/fallback.jpg"}
+              alt={drink.name}
+              fill
+              style={{ objectFit: "cover" }}
+            />
+          </Box>
+        </Box>
 
-      <Typography variant="body1" sx={{ mb: 3 }}>
-        {drink.description}
-      </Typography>
+        {/* Size */}
+        <Typography gutterBottom fontWeight={600}>
+          Choose Your Size
+        </Typography>
+        <ToggleButtonGroup
+          exclusive
+          value={customization.size}
+          onChange={(e, value) =>
+            value && setCustomization((prev) => ({ ...prev, size: value }))
+          }
+          sx={{ mb: 3 }}
+        >
+          {["S", "M", "L"].map((size) => (
+            <ToggleButton
+              key={size}
+              value={size}
+              sx={{ borderRadius: "999px", textTransform: "none", px: 3 }}
+            >
+              {size}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
 
-      <Paper elevation={3} sx={{ p: 3, borderRadius: 3 }}>
-        <FormControl fullWidth sx={{ mb: 3 }}>
-          <InputLabel>Milk</InputLabel>
-          <Select
+        {/* Milk */}
+        <Typography gutterBottom fontWeight={600}>
+          Choose Your Milk
+        </Typography>
+        <Box sx={{ overflowX: "auto", pb: 1 }}>
+          <ToggleButtonGroup
+            exclusive
             value={customization.milk}
-            label="Milk"
+            onChange={(e, value) =>
+              value && setCustomization((prev) => ({ ...prev, milk: value }))
+            }
+            sx={{ mb: 3, display: "inline-flex", whiteSpace: "nowrap" }}
+          >
+            {[
+              { label: "Whole", emoji: "🥛" },
+              { label: "Raw", emoji: "🧑‍🌾" },
+              { label: "Skim", emoji: "💧" },
+              { label: "Oat", emoji: "🌾" },
+              { label: "Almond", emoji: "🌰" },
+              { label: "Soy", emoji: "🫘" },
+            ].map((option) => (
+              <ToggleButton
+                key={option.label}
+                value={option.label}
+                sx={{
+                  borderRadius: "999px",
+                  textTransform: "none",
+                  m: 0.5,
+                  px: 2,
+                  py: 1,
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                  borderColor: "#ccc",
+                  "&.Mui-selected": {
+                    backgroundColor: "#6f4e37",
+                    color: "#fff",
+                  },
+                }}
+              >
+                {option.emoji} {option.label}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+        </Box>
+
+        {/* Syrup */}
+        <FormControl fullWidth sx={{ mb: 3 }}>
+          <InputLabel>Syrup</InputLabel>
+          <Select
+            value={customization.syrup}
+            label="Syrup"
             onChange={(e) =>
-              setCustomization((prev) => ({ ...prev, milk: e.target.value }))
+              setCustomization((prev) => ({ ...prev, syrup: e.target.value }))
             }
           >
-            <MenuItem value="Whole">Whole</MenuItem>
-            <MenuItem value="Skim">Skim</MenuItem>
-            <MenuItem value="Oat">Oat</MenuItem>
-            <MenuItem value="Almond">Almond</MenuItem>
-            <MenuItem value="Soy">Soy</MenuItem>
+            <MenuItem value="">None</MenuItem>
+            <MenuItem value="Vanilla">Vanilla</MenuItem>
+            <MenuItem value="Caramel">Caramel</MenuItem>
+            <MenuItem value="Hazelnut">Hazelnut</MenuItem>
+            <MenuItem value="Pumpkin Spice">Pumpkin Spice</MenuItem>
           </Select>
         </FormControl>
 
-        <Box sx={{ mb: 3 }}>
-          <Typography gutterBottom>Sweetness</Typography>
-          <Slider
-            value={customization.sweetness}
-            onChange={(e, value) =>
-              setCustomization((prev) => ({ ...prev, sweetness: value }))
+        {/* Sauce */}
+        <FormControl fullWidth sx={{ mb: 3 }}>
+          <InputLabel>Sauce</InputLabel>
+          <Select
+            value={customization.sauce}
+            label="Sauce"
+            onChange={(e) =>
+              setCustomization((prev) => ({ ...prev, sauce: e.target.value }))
             }
-            valueLabelDisplay="auto"
-            step={10}
-            marks
-            min={0}
-            max={100}
-          />
-        </Box>
+          >
+            <MenuItem value="">None</MenuItem>
+            <MenuItem value="Mocha">Mocha</MenuItem>
+            <MenuItem value="White Chocolate">White Chocolate</MenuItem>
+            <MenuItem value="Caramel Sauce">Caramel Sauce</MenuItem>
+          </Select>
+        </FormControl>
 
+        {/* Extra Shots */}
         <FormControl fullWidth sx={{ mb: 3 }}>
           <InputLabel>Extra Shots</InputLabel>
           <Select
@@ -140,6 +256,7 @@ export default function CustomizePage() {
           </Select>
         </FormControl>
 
+        {/* Notes */}
         <TextField
           label="Special Instructions"
           multiline
@@ -154,14 +271,24 @@ export default function CustomizePage() {
 
         <Divider sx={{ my: 2 }} />
 
-        <Typography variant="body1" sx={{ mb: 1 }}>
-          <strong>Total:</strong> ${drink.price.toFixed(2)}
+        <Typography variant="body1" sx={{ mb: 1, fontWeight: 600 }}>
+          Total: ${drink.price.toFixed(2)}
         </Typography>
 
         <Button
           variant="contained"
           fullWidth
-          sx={{ mt: 1, py: 1.5, borderRadius: 2 }}
+          sx={{
+            mt: 1,
+            py: 1.5,
+            borderRadius: 2,
+            backgroundColor: "#6f4e37",
+            fontWeight: 600,
+            fontSize: "1rem",
+            "&:hover": {
+              backgroundColor: "#5c3e2e",
+            },
+          }}
           onClick={handleAddToCart}
         >
           Add to Cart
