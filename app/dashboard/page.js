@@ -1,239 +1,237 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { Box, Typography, Paper, LinearProgress, Button } from "@mui/material";
-import { motion } from "framer-motion";
+import {
+  Box,
+  Typography,
+  Paper,
+  LinearProgress,
+  IconButton,
+  Avatar,
+} from "@mui/material";
+import LogoutIcon from "@mui/icons-material/Logout";
 import BottomTabBar from "@/components/MobileNavbar";
 import Image from "next/image";
+import { useKeenSlider } from "keen-slider/react";
+import "keen-slider/keen-slider.min.css";
 
 const tierThresholds = {
-	BRONZE: { max: 200, next: "SILVER" },
-	SILVER: { max: 400, next: "GOLD" },
-	GOLD: { max: 600, next: "VIP" },
-	VIP: { max: 1000, next: null },
+  BRONZE: { max: 200, next: "SILVER" },
+  SILVER: { max: 400, next: "GOLD" },
+  GOLD: { max: 600, next: "VIP" },
+  VIP: { max: 1000, next: null },
 };
 
 export default function DashboardPage() {
-	const [userData, setUserData] = useState(null);
-	const [featuredDrink, setFeaturedDrink] = useState(null);
-	const [loading, setLoading] = useState(true);
-	const router = useRouter();
+  const [userData, setUserData] = useState(null);
+  const [featuredDrinks, setFeaturedDrinks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
-	// Fetch featured drink
-	useEffect(() => {
-		const fetchFeatured = async () => {
-			try {
-				const res = await fetch("/api/drinks/featured");
-				const data = await res.json();
-				if (!data.error) {
-					setFeaturedDrink(data);
-				}
-				console.log("☕ Featured Drink:", data);
-			} catch (err) {
-				console.error("❌ Error fetching featured drink:", err);
-			}
-		};
+  const [sliderRef] = useKeenSlider({
+    loop: true,
+    mode: "snap",
+    slides: { perView: 1.2, spacing: 16 },
+    breakpoints: {
+      "(min-width: 640px)": { slides: { perView: 2.25, spacing: 20 } },
+      "(min-width: 1024px)": { slides: { perView: 3, spacing: 24 } },
+    },
+  });
 
-		fetchFeatured();
-	}, []);
+  useEffect(() => {
+    const fetchUser = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) return router.push("/login");
 
-	// Fetch authenticated user + their info from DB
-	useEffect(() => {
-		const fetchUser = async () => {
-			const {
-				data: { session },
-			} = await supabase.auth.getSession();
+      const res = await fetch(`/api/user/${session.user.id}`);
+      const result = await res.json();
+      setUserData(result);
+      setLoading(false);
+    };
 
-			if (!session) {
-				router.push("/login");
-				return;
-			}
+    const fetchFeatured = async () => {
+      const res = await fetch("/api/drinks/featured");
+      const data = await res.json();
+      setFeaturedDrinks(data);
+    };
 
-			const res = await fetch(`/api/user/${session.user.id}`);
-			const result = await res.json();
+    fetchUser();
+    fetchFeatured();
+  }, [router]);
 
-			if (result.error) {
-				console.error(result.error);
-			} else {
-				setUserData(result);
-			}
+  if (loading || !userData)
+    return (
+      <Typography sx={{ mt: 10, textAlign: "center" }}>Loading...</Typography>
+    );
 
-			setLoading(false);
-		};
-
-		fetchUser();
-	}, [router]);
-
-	if (loading || !userData) {
-		return (
-			<Typography sx={{ mt: 10, textAlign: "center" }}>Loading...</Typography>
-		);
-	}
-
-	const { tier, points } = userData;
-	const current = tierThresholds[tier];
-	const progress = Math.min((points / current.max) * 100, 100);
+  const { tier, points, email } = userData;
+  const current = tierThresholds[tier];
+  const progress = Math.min((points / current.max) * 100, 100);
 
   return (
-		<>
-			<BottomTabBar />
-			<Box sx={{ maxWidth: 600, mx: "auto", mt: 4, px: 2, paddingBottom: 10 }}>
-				<motion.div
-					initial={{ opacity: 0, y: 40 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.6 }}
-				>
-					{/* User Greeting & Rewards */}
-					<Paper elevation={3} sx={{ p: 4, borderRadius: 4, mb: 4 }}>
-						<Typography variant="h5" fontWeight={600} gutterBottom>
-							Welcome back 👋
-						</Typography>
-						<Typography variant="body1">
-							<strong>Tier:</strong> {tier}
-						</Typography>
-						<Typography variant="body2" sx={{ mt: 1 }}>
-							<strong>Points:</strong> {points} / {current.max}
-						</Typography>
-						<LinearProgress
-							variant="determinate"
-							value={progress}
-							sx={{ height: 10, borderRadius: 5, mt: 2 }}
-						/>
-						{current.next && (
-							<Typography variant="caption" sx={{ mt: 1, display: "block" }}>
-								{current.max - points} points to reach{" "}
-								<strong>{current.next}</strong> tier!
-							</Typography>
-						)}
-					</Paper>
+    <>
+      <BottomTabBar />
+      <Box
+        sx={{
+          maxWidth: "100vw",
+          minHeight: "100vh",
+          mx: "auto",
+          px: 2,
+          py: 4,
+          pb: 12,
+          backgroundColor: "#fef8f2",
+          color: "#3e3028",
+        }}
+      >
+        {/* Header */}
+        <Paper
+          elevation={3}
+          sx={{
+            borderRadius: 4,
+            p: 3,
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            backgroundColor: "#fff",
+          }}
+        >
+          <Avatar sx={{ width: 56, height: 56, bgcolor: "#6f4e37" }}>@</Avatar>
+          <Box flex={1}>
+            <Typography variant="h6" fontWeight={700}>
+              @{email.split("@")[0]}
+            </Typography>
+            <Box sx={{ mt: 0.5 }}>
+              <Typography
+                variant="caption"
+                fontWeight={600}
+                sx={{
+                  backgroundColor: tier === "VIP" ? "#FFD700" : "#e6d3c0",
+                  px: 2,
+                  py: 0.5,
+                  borderRadius: 99,
+                  display: "inline-block",
+                }}
+              >
+                {tier}
+              </Typography>
+            </Box>
+          </Box>
+        </Paper>
 
-					{/* Daily Inspiration */}
-					<Paper
-						elevation={1}
-						sx={{
-							mt: 3,
-							mb: 3,
-							p: 3,
-							borderRadius: 4,
-							background: "#fff8f0",
-							textAlign: "center",
-						}}
-					>
-						<Typography fontWeight={600} sx={{ fontSize: "1.1rem" }}>
-							☕ “Start your day with a sip of joy.”
-						</Typography>
-						<Typography variant="caption" color="text.secondary">
-							Your coffee journey continues...
-						</Typography>
-					</Paper>
+        {/* Tier Progress */}
+        <Box sx={{ mt: 4 }}>
+          <Typography fontWeight={500}>
+            {points} / {current.max} points to {current.next ?? "stay VIP"}
+          </Typography>
+          <LinearProgress
+            variant="determinate"
+            value={progress}
+            sx={{
+              height: 10,
+              borderRadius: 5,
+              mt: 1,
+              backgroundColor: "#e0d6cf",
+            }}
+          />
+        </Box>
 
-					{/* Featured Drink Section */}
-					{featuredDrink && (
-						<motion.div
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.5 }}
-						>
-							<Paper
-								elevation={3}
-								sx={{
-									mt: 3,
-									mb: 3,
-									borderRadius: 4,
-									overflow: "hidden",
-									background: "#ffffff",
-									boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-									textAlign: "center",
-									px: 2,
-									py: 3,
-								}}
-							>
-								<Image
-									src={featuredDrink.imageUrl}
-									alt={featuredDrink.name}
-									width={180}
-									height={180}
-									style={{
-										borderRadius: "12px",
-										objectFit: "cover",
-										margin: "0 auto",
-									}}
-								/>
+        {/* Recent Orders */}
+        <Box sx={{ mt: 5 }}>
+          <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+            Recent Orders
+          </Typography>
+          {["Latte", "Mocha", "Cappuccino"].map((item, index) => (
+            <Paper
+              key={index}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                mb: 2,
+                px: 2,
+                py: 1,
+                borderRadius: 3,
+                backgroundColor: "#fff",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+              }}
+            >
+              <Avatar sx={{ bgcolor: "#f4f4f4", color: "#6f4e37", mr: 2 }}>
+                ☕
+              </Avatar>
+              <Box>
+                <Typography fontWeight={600}>{item}</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Just now
+                </Typography>
+              </Box>
+            </Paper>
+          ))}
+        </Box>
 
-								<Typography
-									variant="overline"
-									sx={{
-										color: "#6f4e37",
-										letterSpacing: 1.5,
-										fontWeight: 700,
-										textTransform: "uppercase",
-										mt: 2,
-									}}
-								>
-									🌟 Drink of the Month
-								</Typography>
-
-								<Typography variant="h6" fontWeight={600} sx={{ mt: 1 }}>
-									{featuredDrink.name}
-								</Typography>
-
-								<Typography
-									variant="body2"
-									color="text.secondary"
-									sx={{ mt: 0.5 }}
-								>
-									{featuredDrink.description}
-								</Typography>
-
-								<Typography
-									variant="subtitle1"
-									fontWeight={700}
-									sx={{ mt: 1.5, color: "#333" }}
-								>
-									${featuredDrink.price.toFixed(2)}
-								</Typography>
-							</Paper>
-						</motion.div>
-					)}
-
-					{/* Upcoming Tier Reward */}
-					{current.next && (
-						<Paper
-							elevation={1}
-							sx={{
-								mt: 4,
-								p: 3,
-								textAlign: "center",
-								borderRadius: 4,
-								background: "#f5f5f5",
-							}}
-						>
-							<Typography variant="body2">
-								You're <strong>{current.max - points} points</strong> away from
-								reaching <strong>{current.next}</strong> tier 🎯
-							</Typography>
-							<Typography variant="caption" color="text.secondary">
-								Unlock new perks and rewards!
-							</Typography>
-						</Paper>
-					)}
-
-					{/* Sign Out */}
-					<Button
-						fullWidth
-						variant="outlined"
-						sx={{ mt: 5, textTransform: "none" }}
-						onClick={async () => {
-							await supabase.auth.signOut();
-							router.push("/login");
-						}}
-					>
-						Sign Out
-					</Button>
-				</motion.div>
-			</Box>
-		</>
-	);
+        {/* Featured Drinks Carousel */}
+        {featuredDrinks.length > 0 && (
+          <Box sx={{ mt: 6 }}>
+            <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+              🌟 Featured Drinks
+            </Typography>
+            <Box ref={sliderRef} className="keen-slider">
+              {featuredDrinks.map((drink, idx) => (
+                <Box
+                  key={drink.id}
+                  className="keen-slider__slide"
+                  sx={{
+                    px: 1,
+                    minWidth: 220,
+                    maxWidth: 250,
+                    textAlign: "center",
+                  }}
+                >
+                  <Paper
+                    elevation={2}
+                    sx={{
+                      p: 2,
+                      borderRadius: 3,
+                      backgroundColor: "#fff",
+                      height: "100%",
+                    }}
+                  >
+                    <Image
+                      src={drink.imageUrl || "/images/fallback.jpg"}
+                      alt={drink.name}
+                      width={160}
+                      height={160}
+                      style={{ borderRadius: 12, objectFit: "cover" }}
+                    />
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight={600}
+                      sx={{ mt: 1 }}
+                    >
+                      {drink.name}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{ mt: 0.5, color: "#5a4a3c", display: "block" }}
+                    >
+                      {drink.description}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      fontWeight={700}
+                      sx={{ mt: 1, color: "#3e3028" }}
+                    >
+                      ${drink.price.toFixed(2)}
+                    </Typography>
+                  </Paper>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
+      </Box>
+    </>
+  );
 }

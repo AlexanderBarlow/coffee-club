@@ -25,73 +25,76 @@ export default function CategoryPage({ category, emoji, label }) {
 	};
 
 	return (
-		<Box sx={{ backgroundColor: "#fef8f2", minHeight: "100vh" }}>
-			{/* Fixed Back Button spacing */}
-			<Container maxWidth="md" sx={{ pt: 2, pb: 0 }}>
-				<Button
-					variant="text"
-					onClick={() => router.back()}
-					sx={{
-						color: "#6f4e37",
-						textTransform: "none",
-						fontWeight: 500,
-						fontSize: "0.95rem",
-						pl: 0,
-						"&:hover": { textDecoration: "underline" },
-					}}
-				>
-					← Back
-				</Button>
-			</Container>
+    <Box sx={{ backgroundColor: "#fef8f2", minHeight: "100vh" }}>
+      
+        <BottomTabBar />
+      
+      {/* Fixed Back Button spacing */}
+      <Container maxWidth="md" sx={{ pb: 0 }}>
+        <Button
+          variant="text"
+          onClick={() => router.back()}
+          sx={{
+            color: "#6f4e37",
+            textTransform: "none",
+            fontWeight: 500,
+            fontSize: "0.95rem",
+            pl: 0,
+            "&:hover": { textDecoration: "underline" },
+          }}
+        >
+          ← Back
+        </Button>
+      </Container>
 
-			<Container
-				maxWidth="md"
-				sx={{
-					pt: 2,
-					pb: { xs: 12, sm: 14 },
-					minHeight: "100vh",
-					position: "relative",
-				}}
-			>
-				<Typography
-					variant="h4"
-					fontWeight={700}
-					sx={{
-						mb: 3,
-						textAlign: { xs: "center", sm: "left" },
-						color: "#6f4e37",
-					}}
-				>
-					{emoji} {label}
-				</Typography>
+      <Container
+        maxWidth="md"
+        sx={{
+          pt: 2,
+          pb: { xs: 12, sm: 14 },
+          minHeight: "100vh",
+          position: "relative",
+        }}
+      >
+        <Typography
+          variant="h4"
+          fontWeight={700}
+          sx={{
+            mb: 3,
+            textAlign: { xs: "center", sm: "left" },
+            color: "#6f4e37",
+          }}
+        >
+          {emoji} {label}
+        </Typography>
 
-				<Box
-					sx={{
-						display: "flex",
-						flexWrap: "wrap",
-						gap: 3,
-						justifyContent: { xs: "center", sm: "flex-start" },
-					}}
-				>
-					{drinks.map((drink) => (
-						<Box
-							key={drink.name}
-							sx={{
-								width: {
-									xs: "100%",
-									sm: "calc(50% - 12px)",
-									md: "calc(33.333% - 16px)",
-								},
-								display: "flex",
-							}}
-						>
-							<ProductCard drink={drink} onCustomize={handleCustomize} />
-						</Box>
-					))}
-				</Box>
-			</Container>
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 3,
+            justifyContent: { xs: "center", sm: "flex-start" },
+          }}
+        >
+          {drinks.map((drink) => (
+            <Box
+              key={drink.name}
+              sx={{
+                width: {
+                  xs: "100%",
+                  sm: "calc(50% - 12px)",
+                  md: "calc(33.333% - 16px)",
+                },
+                display: "flex",
+              }}
+            >
+              <ProductCard drink={drink} onCustomize={handleCustomize} />
+            </Box>
+          ))}
+        </Box>
+      </Container>
 
-			<BottomTabBar />
-		</Box>
-	);
+      <BottomTabBar />
+    </Box>
+  );
 }

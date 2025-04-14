@@ -54,6 +54,7 @@ export default function ResponsiveNavbar() {
   const authNavItems = [
     ...navItems,
     { label: "Rewards", icon: <EmojiEventsIcon />, path: "/rewards" },
+    { label: "Profile", icon: <EmojiEventsIcon />, path: "/dashboard" },
     {
       label: "Cart",
       icon: (
@@ -180,7 +181,6 @@ export default function ResponsiveNavbar() {
           )}
         </List>
       </Drawer>
-      <Toolbar /> {/* Push page content down below AppBar */}
     </>
   );
 }

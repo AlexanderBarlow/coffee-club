@@ -35,7 +35,7 @@ export default function MenuPage() {
     >
       <BottomTabBar />
 
-      <Box sx={{ px: 3, pt: 10, pb: 6 }}>
+      <Box sx={{ px:3, pb: 6 }}>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
