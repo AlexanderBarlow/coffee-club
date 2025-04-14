@@ -11,6 +11,10 @@ export default function VerifyPage() {
   useEffect(() => {
 		const interval = setInterval(async () => {
 			console.log("🔄 Polling for session...");
+
+			// Force session refresh to get latest status
+			await supabase.auth.refreshSession();
+
 			const {
 				data: { session },
 			} = await supabase.auth.getSession();
@@ -52,6 +56,7 @@ export default function VerifyPage() {
 
 		return () => clearInterval(interval);
 	}, [router]);
+
 
 
   return (
