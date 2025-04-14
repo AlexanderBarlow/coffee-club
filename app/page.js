@@ -11,6 +11,8 @@ import "keen-slider/keen-slider.min.css";
 import { useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import { useState } from "react";
+import { supabase } from "@/lib/supabaseClient"; // already in your project
+
 
 const steps = [
   {
@@ -38,6 +40,19 @@ const steps = [
 ];
 
 export default function LandingPage() {
+
+	const [user, setUser] = useState(null);
+
+	useEffect(() => {
+		const getSession = async () => {
+			const {
+				data: { session },
+			} = await supabase.auth.getSession();
+			setUser(session?.user || null);
+		};
+		getSession();
+	}, []);
+
 
   const [featuredDrinks, setFeaturedDrinks] = useState([]);
 
@@ -114,26 +129,28 @@ export default function LandingPage() {
 					Your personalized coffee experience, one cup at a time.
 				</motion.p>
 
-				<motion.div
-					className="flex justify-center gap-5 z-10 relative"
-					initial={{ opacity: 0 }}
-					animate={{ opacity: 1 }}
-					transition={{ delay: 0.5 }}
-				>
-					<Link href="/signup">
-						<Button className="rounded-full px-6 py-2 text-lg shadow-lg hover:shadow-2xl hover:brightness-105 transition">
-							Sign Up
-						</Button>
-					</Link>
-					<Link href="/login">
-						<Button
-							variant="outline"
-							className="rounded-full px-6 py-2 text-lg border-[#6f4e37] hover:bg-[#6f4e37]/10 transition"
-						>
-							Log In
-						</Button>
-					</Link>
-				</motion.div>
+				{!user && (
+					<motion.div
+						className="flex justify-center gap-5 z-10 relative"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						transition={{ delay: 0.5 }}
+					>
+						<Link href="/signup">
+							<Button className="rounded-full px-6 py-2 text-lg shadow-lg hover:shadow-2xl hover:brightness-105 transition">
+								Sign Up
+							</Button>
+						</Link>
+						<Link href="/login">
+							<Button
+								variant="outline"
+								className="rounded-full px-6 py-2 text-lg border-[#6f4e37] hover:bg-[#6f4e37]/10 transition"
+							>
+								Log In
+							</Button>
+						</Link>
+					</motion.div>
+				)}
 
 				<motion.div
 					className="absolute top-[-20px] right-[-5px] opacity-10 pointer-events-none"
