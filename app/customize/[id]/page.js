@@ -37,6 +37,10 @@ export default function CustomizePage() {
 		notes: "",
 	});
 
+	const [syrups, setSyrups] = useState([]);
+	const [sauces, setSauces] = useState([]);
+	const [milks, setMilks] = useState([]);
+
 	useEffect(() => {
 		const checkAuthAndFetch = async () => {
 			const {
@@ -49,11 +53,20 @@ export default function CustomizePage() {
 			}
 
 			try {
-				const res = await fetch(`/api/drinks/${id}`);
-				const data = await res.json();
-				setDrink(data);
+				const [drinkRes, optionsRes] = await Promise.all([
+					fetch(`/api/drinks/${id}`),
+					fetch("/api/options"),
+				]);
+
+				const drinkData = await drinkRes.json();
+				const optionsData = await optionsRes.json();
+
+				setDrink(drinkData);
+				setSyrups(optionsData.syrups || []);
+				setSauces(optionsData.sauces || []);
+				setMilks(optionsData.milks || []);
 			} catch (err) {
-				console.error("Error fetching drink:", err);
+				console.error("Error fetching data:", err);
 			} finally {
 				setLoading(false);
 			}
@@ -64,12 +77,7 @@ export default function CustomizePage() {
 
 	const handleAddToCart = () => {
 		const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-
-		cart.push({
-			...drink,
-			customization,
-		});
-
+		cart.push({ ...drink, customization });
 		localStorage.setItem("cart", JSON.stringify(cart));
 		router.push("/cart");
 	};
@@ -88,7 +96,22 @@ export default function CustomizePage() {
 		<Box
 			sx={{ px: 2, py: 4, maxWidth: 800, mx: "auto", background: "#fef8f2" }}
 		>
+			<Button
+				variant="text"
+				onClick={() => router.back()}
+				sx={{
+					mb: 2,
+					color: "#6f4e37",
+					textTransform: "none",
+					fontWeight: 500,
+					fontSize: "0.95rem",
+					"&:hover": { textDecoration: "underline" },
+				}}
+			>
+				← Back
+			</Button>
 			<Paper elevation={3} sx={{ p: 3, background: "#fef8f2" }}>
+				{/* Image & Title */}
 				<Box
 					sx={{
 						display: "flex",
@@ -130,6 +153,7 @@ export default function CustomizePage() {
 					</Box>
 				</Box>
 
+				{/* Size */}
 				<Typography gutterBottom fontWeight={600}>
 					Choose Your Size
 				</Typography>
@@ -152,42 +176,36 @@ export default function CustomizePage() {
 					))}
 				</ToggleButtonGroup>
 
+				{/* Milk */}
 				<Typography gutterBottom fontWeight={600}>
 					Choose Your Milk
 				</Typography>
 				<Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mb: 3 }}>
-					{["Whole", "Raw", "Skim", "Oat", "Almond", "Soy"].map(
-						(type, index) => {
-							const emojis = ["🥛", "🧑‍🌾", "💧", "🌾", "🌰", "🫘"];
-							return (
-								<ToggleButton
-									key={type}
-									value={type}
-									selected={customization.milk === type}
-									onClick={() =>
-										setCustomization((prev) => ({ ...prev, milk: type }))
-									}
-									sx={{
-										borderRadius: "999px",
-										textTransform: "none",
-										px: 2,
-										py: 1,
-										fontWeight: 600,
-										fontSize: "0.85rem",
-										borderColor: "#ccc",
-										"&.Mui-selected": {
-											backgroundColor: "#6f4e37",
-											color: "#fff",
-										},
-									}}
-								>
-									{emojis[index]} {type}
-								</ToggleButton>
-							);
-						}
-					)}
+					{milks.map((milk) => (
+						<ToggleButton
+							key={milk.name}
+							value={milk.name}
+							selected={customization.milk === milk.name}
+							onClick={() =>
+								setCustomization((prev) => ({ ...prev, milk: milk.name }))
+							}
+							sx={{
+								borderRadius: "999px",
+								textTransform: "none",
+								px: 2,
+								py: 1,
+								fontWeight: 600,
+								fontSize: "0.85rem",
+								borderColor: "#ccc",
+								"&.Mui-selected": { backgroundColor: "#6f4e37", color: "#fff" },
+							}}
+						>
+							{milk.emoji || "🥛"} {milk.name}
+						</ToggleButton>
+					))}
 				</Box>
 
+				{/* Syrup */}
 				<FormControl fullWidth sx={{ mb: 3 }}>
 					<InputLabel>Syrup</InputLabel>
 					<Select
@@ -198,13 +216,15 @@ export default function CustomizePage() {
 						}
 					>
 						<MenuItem value="">None</MenuItem>
-						<MenuItem value="Vanilla">Vanilla</MenuItem>
-						<MenuItem value="Caramel">Caramel</MenuItem>
-						<MenuItem value="Hazelnut">Hazelnut</MenuItem>
-						<MenuItem value="Pumpkin Spice">Pumpkin Spice</MenuItem>
+						{syrups.map((s) => (
+							<MenuItem key={s.id} value={s.name}>
+								{s.name}
+							</MenuItem>
+						))}
 					</Select>
 				</FormControl>
 
+				{/* Sauce */}
 				<FormControl fullWidth sx={{ mb: 3 }}>
 					<InputLabel>Sauce</InputLabel>
 					<Select
@@ -215,12 +235,15 @@ export default function CustomizePage() {
 						}
 					>
 						<MenuItem value="">None</MenuItem>
-						<MenuItem value="Mocha">Mocha</MenuItem>
-						<MenuItem value="White Chocolate">White Chocolate</MenuItem>
-						<MenuItem value="Caramel Sauce">Caramel Sauce</MenuItem>
+						{sauces.map((s) => (
+							<MenuItem key={s.id} value={s.name}>
+								{s.name}
+							</MenuItem>
+						))}
 					</Select>
 				</FormControl>
 
+				{/* Extra Shots */}
 				<FormControl fullWidth sx={{ mb: 3 }}>
 					<InputLabel>Extra Shots</InputLabel>
 					<Select
@@ -241,6 +264,7 @@ export default function CustomizePage() {
 					</Select>
 				</FormControl>
 
+				{/* Notes */}
 				<TextField
 					label="Special Instructions"
 					multiline
@@ -269,9 +293,7 @@ export default function CustomizePage() {
 						backgroundColor: "#6f4e37",
 						fontWeight: 600,
 						fontSize: "1rem",
-						"&:hover": {
-							backgroundColor: "#5c3e2e",
-						},
+						"&:hover": { backgroundColor: "#5c3e2e" },
 					}}
 					onClick={handleAddToCart}
 				>

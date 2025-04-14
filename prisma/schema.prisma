@@ -1,32 +1,31 @@
 generator client {
   provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  tier          Tier     @default(BRONZE)
-  points        Int      @default(0)
-  isAdmin       Boolean  @default(false) // ✅ NEW: Admin role
-  orders        Order[]
-  createdAt     DateTime @default(now())
+  id        String   @id @default(uuid())
+  email     String   @unique
+  tier      Tier     @default(BRONZE)
+  points    Int      @default(0)
+  isAdmin   Boolean  @default(false)
+  orders    Order[]
+  createdAt DateTime @default(now())
 }
 
 model Order {
-  id            String     @id @default(uuid())
-  user          User       @relation(fields: [userId], references: [id])
+  id            String        @id @default(uuid())
+  user          User          @relation(fields: [userId], references: [id])
   userId        String
   items         Json
   total         Float
-  status        OrderStatus  @default(PENDING) // ✅ NEW: status for ticketing
-  paymentStatus PaymentStatus @default(UNPAID) // ✅ NEW: payment status
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  status        OrderStatus   @default(PENDING)
+  paymentStatus PaymentStatus @default(UNPAID)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 model Drink {
@@ -39,6 +38,36 @@ model Drink {
   available   Boolean  @default(true)
   featured    Boolean  @default(false)
   createdAt   DateTime @default(now())
+
+  syrups Syrup[] @relation("DrinkSyrups")
+  sauces Sauce[] @relation("DrinkSauces")
+  milks  Milk[]  @relation("DrinkMilks")
+}
+
+model Syrup {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  drinks      Drink[] @relation("DrinkSyrups")
+  brand       String
+  description String
+}
+
+model Sauce {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  drinks      Drink[] @relation("DrinkSauces")
+  brand       String
+  description String
+}
+
+model Milk {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  emoji       String? // Optional: for UI use
+  drinks      Drink[] @relation("DrinkMilks")
+  raw         Boolean @default(false)
+  brand       String
+  description String
 }
 
 enum Tier {
