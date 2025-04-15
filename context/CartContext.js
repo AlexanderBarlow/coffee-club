@@ -8,8 +8,6 @@ export function CartProvider({ children }) {
 	const [cart, setCart] = useState([]);
 	const [isLoaded, setIsLoaded] = useState(false); // ✅ NEW
 
-	console.log(cart)
-
 	useEffect(() => {
 		const stored = localStorage.getItem("cart");
 		if (stored) {
