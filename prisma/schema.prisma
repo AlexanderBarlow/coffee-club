@@ -1,6 +1,7 @@
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -67,6 +68,11 @@ model Milk {
   drinks      Drink[] @relation("DrinkMilks")
   raw         Boolean @default(false)
   brand       String
+  description String
+}
+
+model Rewards {
+  name        String @unique
   description String
 }
 
