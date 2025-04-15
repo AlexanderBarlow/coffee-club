@@ -27,6 +27,7 @@ const tierThresholds = {
 
 export default function DashboardPage() {
 	const [userData, setUserData] = useState(null);
+	const [orders, setOrders] = useState([]);
 	const [featuredDrinks, setFeaturedDrinks] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const router = useRouter();
@@ -42,26 +43,30 @@ export default function DashboardPage() {
 	});
 
 	useEffect(() => {
-		const fetchUser = async () => {
+		const fetchAll = async () => {
 			const {
 				data: { session },
 			} = await supabase.auth.getSession();
+
 			if (!session) return router.push("/login");
 
-			const res = await fetch(`/api/user/${session.user.id}`);
-			const result = await res.json();
-			setUserData(result);
+			const [userRes, ordersRes, drinksRes] = await Promise.all([
+				fetch(`/api/user/${session.user.id}`),
+				fetch(`/api/user/${session.user.id}/orders`),
+				fetch("/api/drinks/featured"),
+			]);
+
+			const userData = await userRes.json();
+			const ordersData = await ordersRes.json();
+			const drinksData = await drinksRes.json();
+
+			setUserData(userData);
+			setOrders(Array.isArray(ordersData) ? ordersData : []);
+			setFeaturedDrinks(drinksData);
 			setLoading(false);
 		};
 
-		const fetchFeatured = async () => {
-			const res = await fetch("/api/drinks/featured");
-			const data = await res.json();
-			setFeaturedDrinks(data);
-		};
-
-		fetchUser();
-		fetchFeatured();
+		fetchAll();
 	}, [router]);
 
 	const { tier, points, email } = userData || {};
@@ -128,7 +133,7 @@ export default function DashboardPage() {
 					</Paper>
 				</motion.div>
 
-				{/* Tier Progress */}
+				{/* Progress */}
 				<motion.div
 					initial={{ opacity: 0, y: 10 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -141,17 +146,12 @@ export default function DashboardPage() {
 						<LinearProgress
 							variant="determinate"
 							value={progress}
-							sx={{
-								height: 10,
-								borderRadius: 5,
-								mt: 1,
-								backgroundColor: "#e0d6cf",
-							}}
+							sx={{ height: 10, borderRadius: 5, mt: 1 }}
 						/>
 					</Box>
 				</motion.div>
 
-				{/* Recent Orders */}
+				{/* Real Orders */}
 				<motion.div
 					initial={{ opacity: 0 }}
 					animate={{ opacity: 1 }}
@@ -161,39 +161,48 @@ export default function DashboardPage() {
 						<Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
 							Recent Orders
 						</Typography>
-						{["Latte", "Mocha", "Cappuccino"].map((item, index) => (
-							<motion.div
-								key={index}
-								whileHover={{ scale: 1.02 }}
-								whileTap={{ scale: 0.98 }}
-								style={{ marginBottom: "12px" }}
+						{orders.slice(0, 3).map((order) => (
+							<Paper
+								key={order.id}
+								sx={{
+									mb: 2,
+									p: 2,
+									borderRadius: 3,
+									backgroundColor: "#fff",
+									boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+								}}
 							>
-								<Paper
-									sx={{
-										display: "flex",
-										alignItems: "center",
-										px: 2,
-										py: 1.5,
-										borderRadius: 3,
-										backgroundColor: "#fff",
-										boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-									}}
-								>
-									<Avatar sx={{ bgcolor: "#f4f4f4", color: "#6f4e37", mr: 2 }}>
-										☕
-									</Avatar>
-									<Box>
-										<Typography fontWeight={600}>{item}</Typography>
-										<Typography variant="caption" color="text.secondary">
-											Just now
-										</Typography>
+								<Typography fontWeight={600}>
+									🧾 Order on {new Date(order.createdAt).toLocaleDateString()}
+								</Typography>
+								{order.items.map((item, idx) => (
+									<Box
+										key={idx}
+										sx={{
+											display: "flex",
+											alignItems: "center",
+											mb: 1.5,
+											gap: 2,
+										}}
+									>
+										<Avatar
+											src={item.imageUrl}
+											alt={item.name}
+											sx={{ width: 48, height: 48 }}
+										/>
+										<Box>
+											<Typography fontWeight={500}>{item.name}</Typography>
+											<Typography variant="caption" color="text.secondary">
+												{item.customization?.size} • {item.customization?.milk}
+											</Typography>
+										</Box>
 									</Box>
-								</Paper>
-							</motion.div>
+								))}
+								<Typography fontWeight={600}>Total: ${order.total}</Typography>
+							</Paper>
 						))}
 					</Box>
 				</motion.div>
-
 				{/* Featured Drinks */}
 				<motion.div
 					initial={{ opacity: 0, y: 10 }}
