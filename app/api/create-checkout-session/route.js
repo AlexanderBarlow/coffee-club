@@ -24,28 +24,28 @@ export async function POST(req) {
 		console.log("🧪 Origin used for Stripe redirect:", origin);
 
 	const session = await stripe.checkout.sessions.create({
-		payment_method_types: ["card"],
-		line_items: cartItems.map((item) => ({
-			price_data: {
-				currency: "usd",
-				product_data: {
-					name: item.name,
-					images: item.imageUrl?.startsWith("http")
-						? [item.imageUrl]
-						: [`${origin}${item.imageUrl}`],
-				},
-				unit_amount: Math.round(item.price * 100),
-			},
-			quantity: 1,
-		})),
-		mode: "payment",
-		success_url: `${origin}/success`,
-		cancel_url: `${origin}/cancel`,
-		metadata: {
-			userId,
-			tempCartId: tempCart.id,
-		},
-	});
+    payment_method_types: ["card"],
+    line_items: cartItems.map((item) => ({
+      price_data: {
+        currency: "usd",
+        product_data: {
+          name: item.name,
+          images: item.imageUrl?.startsWith("http")
+            ? [item.imageUrl]
+            : [`${origin}${item.imageUrl}`],
+        },
+        unit_amount: Math.round(item.price * 100),
+      },
+      quantity: 1,
+    })),
+    mode: "payment",
+    success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}/cancel`,
+    metadata: {
+      userId,
+      tempCartId: tempCart.id,
+    },
+  });
 
 
 		return Response.json({ url: session.url });
