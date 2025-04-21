@@ -1,5 +1,3 @@
-// ✅ 1. Updated Success Page - app/success/page.jsx
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -18,12 +16,15 @@ export default function SuccessPage() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get("session_id");
   const router = useRouter();
   const { setCart } = useCart();
 
   useEffect(() => {
+    const sessionId = searchParams.get("session_id"); // ✅ now scoped here
+
     const fetchOrder = async () => {
+      if (!sessionId) return;
+
       try {
         const res = await fetch(`/api/orders/by-session/${sessionId}`);
         const data = await res.json();
@@ -37,8 +38,8 @@ export default function SuccessPage() {
       }
     };
 
-    if (sessionId) fetchOrder();
-  }, [sessionId, setCart]);
+    fetchOrder();
+  }, [searchParams, setCart]);
 
   if (loading) {
     return (
