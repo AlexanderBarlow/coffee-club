@@ -114,8 +114,6 @@ export default function CategoryPage({ category, emoji, label }) {
 						  ))}
 				</Box>
 			</Container>
-
-			<BottomTabBar />
 		</Box>
 	);
 }
