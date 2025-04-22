@@ -11,6 +11,7 @@ import {
   Button,
 } from "@mui/material";
 import { useCart } from "@/context/CartContext";
+import CelebrationIcon from "@mui/icons-material/Celebration";
 
 export default function SuccessContent() {
   const searchParams = useSearchParams();
@@ -56,19 +57,37 @@ export default function SuccessContent() {
   }
 
   return (
-    <Box sx={{ maxWidth: 700, mx: "auto", p: 3 }}>
-      <Typography variant="h4" fontWeight={700} gutterBottom>
-        🎉 Order Confirmed!
-      </Typography>
-      <Typography variant="body1" sx={{ mb: 3 }}>
-        Thank you for your order placed on{" "}
-        <strong>{new Date(order.createdAt).toLocaleString()}</strong>
-      </Typography>
+    <Box
+      sx={{
+        maxWidth: 700,
+        mx: "auto",
+        p: { xs: 2, sm: 4 },
+        mt: 6,
+        backgroundColor: "#fffaf6",
+        borderRadius: 3,
+        boxShadow: 3,
+      }}
+    >
+      <Box textAlign="center" sx={{ mb: 4 }}>
+        <CelebrationIcon
+          fontSize="large"
+          sx={{ color: "#6f4e37", fontSize: 40, mb: 1 }}
+        />
+        <Typography variant="h4" fontWeight={700} color="#3e3028">
+          Order Confirmed!
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Thank you for your order placed on{" "}
+          <strong>{new Date(order.createdAt).toLocaleString()}</strong>
+        </Typography>
+      </Box>
 
-      <Paper elevation={3} sx={{ p: 3, borderRadius: 3 }}>
+      <Paper elevation={1} sx={{ p: 3, borderRadius: 2, background: "#fff" }}>
         {order.items.map((item, idx) => (
           <Box key={idx} sx={{ mb: 2 }}>
-            <Typography variant="h6">{item.name}</Typography>
+            <Typography fontWeight={600} variant="h6" color="#6f4e37">
+              {item.name}
+            </Typography>
             <Typography variant="body2">
               Size: {item.customization?.size} • Milk:{" "}
               {item.customization?.milk}
@@ -83,14 +102,20 @@ export default function SuccessContent() {
                 Notes: {item.customization.notes}
               </Typography>
             )}
-            <Typography fontWeight={600} sx={{ mt: 1 }}>
+            <Typography fontWeight={600} sx={{ mt: 1 }} color="#3e3028">
               ${item.price.toFixed(2)}
             </Typography>
-            <Divider sx={{ my: 2 }} />
+            {idx < order.items.length - 1 && <Divider sx={{ my: 2 }} />}
           </Box>
         ))}
 
-        <Typography variant="h6" fontWeight={700}>
+        <Divider sx={{ my: 2 }} />
+        <Typography
+          variant="h6"
+          fontWeight={700}
+          color="#6f4e37"
+          sx={{ textAlign: "right" }}
+        >
           Total: ${order.total.toFixed(2)}
         </Typography>
       </Paper>
@@ -98,7 +123,13 @@ export default function SuccessContent() {
       <Button
         variant="contained"
         fullWidth
-        sx={{ mt: 4 }}
+        sx={{
+          mt: 4,
+          py: 1.5,
+          fontWeight: 600,
+          backgroundColor: "#6f4e37",
+          "&:hover": { backgroundColor: "#5c3e2e" },
+        }}
         onClick={() => router.push("/dashboard")}
       >
         Return to Dashboard

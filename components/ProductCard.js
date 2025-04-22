@@ -1,6 +1,12 @@
 "use client";
 
-import { Box, Typography, IconButton, Paper } from "@mui/material";
+import {
+  Box,
+  Typography,
+  IconButton,
+  Paper,
+  useMediaQuery,
+} from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -9,6 +15,7 @@ import Image from "next/image";
 
 export default function ProductCard({ drink }) {
   const router = useRouter();
+  const isMobile = useMediaQuery("(max-width:600px)");
 
   const handleCustomizeClick = async () => {
     const {
@@ -24,35 +31,39 @@ export default function ProductCard({ drink }) {
 
   return (
     <motion.div
-      whileHover={{ scale: 1.02, boxShadow: "0 12px 24px rgba(0,0,0,0.1)" }}
-      transition={{ type: "spring", stiffness: 200, damping: 20 }}
+      whileHover={!isMobile ? { scale: 1.02 } : {}}
+      transition={{ type: "spring", stiffness: 180, damping: 16 }}
       style={{ width: "100%" }}
     >
       <Paper
-        elevation={3}
+        elevation={0}
         sx={{
           borderRadius: 3,
           display: "flex",
           p: 2,
           backgroundColor: "#fffdfb",
+          boxShadow: isMobile
+            ? "0 1px 3px rgba(0,0,0,0.04)"
+            : "0 2px 6px rgba(0,0,0,0.08)",
           height: {
             xs: 150,
-            sm: 160,
-            md: 180,
+            sm: 170,
+            md: 190,
             lg: 200,
           },
+          transition: "box-shadow 0.3s ease",
+          "&:hover": !isMobile
+            ? {
+                boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
+              }
+            : {},
         }}
       >
         {/* Image */}
         <Box
           sx={{
             flexShrink: 0,
-            width: {
-              xs: 90,
-              sm: 100,
-              md: 120,
-              lg: 130,
-            },
+            width: { xs: 80, sm: 90, md: 105, lg: 110 },
             height: "100%",
             borderRadius: 2,
             overflow: "hidden",
@@ -60,20 +71,20 @@ export default function ProductCard({ drink }) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            bgcolor: "#f4f4f4",
+            bgcolor: "#f3f3f3",
           }}
         >
           <Image
             src={drink.imageUrl || "/images/fallback.jpg"}
             alt={drink.name}
-            loading="lazy"
             width={120}
             height={120}
+            loading="lazy"
             style={{
               objectFit: "contain",
-              maxHeight: "100%",
-              maxWidth: "100%",
-              borderRadius: "8px",
+              width: "100%",
+              height: "100%",
+              borderRadius: "12px", // Apply explicit rounding
             }}
           />
         </Box>
@@ -94,11 +105,9 @@ export default function ProductCard({ drink }) {
               fontWeight={700}
               color="#3e3028"
               sx={{
-                lineHeight: 1.3,
                 fontSize: { xs: "1rem", md: "1.1rem", lg: "1.2rem" },
-                maxHeight: 48,
+                lineHeight: 1.3,
                 overflow: "hidden",
-                textOverflow: "ellipsis",
                 display: "-webkit-box",
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: "vertical",
@@ -113,9 +122,7 @@ export default function ProductCard({ drink }) {
               sx={{
                 mt: 0.5,
                 fontSize: { xs: "0.8rem", sm: "0.85rem", md: "0.9rem" },
-                maxHeight: 40,
                 overflow: "hidden",
-                textOverflow: "ellipsis",
                 display: "-webkit-box",
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: "vertical",
