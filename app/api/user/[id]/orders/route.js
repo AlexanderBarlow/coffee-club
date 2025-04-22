@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 export async function GET(_, context) {
 	const { params } = context;
-	const { id } = params;
+	const { id } =  await params;
 
 	try {
 		const orders = await prisma.order.findMany({

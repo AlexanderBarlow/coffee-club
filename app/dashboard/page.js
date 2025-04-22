@@ -209,76 +209,79 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Featured Drinks */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Box sx={{ mt: 6 }}>
-            <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
-              🌟 Featured Drinks
-            </Typography>
-            <Box ref={sliderRef} className="keen-slider">
-              {featuredDrinks.map((drink) => (
-                <Box
-                  key={drink.id}
-                  className="keen-slider__slide"
+        <Box sx={{ mt: 6 }}>
+          <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+            🌟 Featured Drinks
+          </Typography>
+
+          <Box ref={sliderRef} className="keen-slider">
+            {featuredDrinks.map((drink) => (
+              <Box
+                key={drink.id}
+                className="keen-slider__slide"
+                sx={{
+                  px: 1,
+                  minWidth: 240,
+                  maxWidth: 260,
+                  transform: "translateZ(0)",
+                  willChange: "transform",
+                }}
+              >
+                <Paper
+                  elevation={3}
                   sx={{
-                    px: 1,
-                    minWidth: 220,
-                    maxWidth: 250,
+                    p: 2,
+                    borderRadius: 3,
+                    backgroundColor: "#fff",
                     display: "flex",
-                    justifyContent: "center",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textAlign: "center",
+                    transition: "transform 0.2s ease",
+                    "&:hover": {
+                      transform: "scale(1.03)",
+                    },
                   }}
                 >
-                  <motion.div whileHover={{ scale: 1.03 }}>
-                    <Paper
-                      elevation={3}
-                      sx={{
-                        p: 2,
-                        borderRadius: 3,
-                        backgroundColor: "#fff",
-                        height: "100%",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        textAlign: "center",
-                      }}
-                    >
-                      <Image
-                        src={drink.imageUrl || "/images/fallback.jpg"}
-                        alt={drink.name}
-                        width={160}
-                        height={160}
-                        style={{ borderRadius: 12, objectFit: "cover" }}
-                      />
-                      <Typography
-                        variant="subtitle2"
-                        fontWeight={600}
-                        sx={{ mt: 1 }}
-                      >
-                        {drink.name}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        sx={{ mt: 0.5, color: "#5a4a3c" }}
-                      >
-                        {drink.description}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        fontWeight={700}
-                        sx={{ mt: 1, color: "#3e3028" }}
-                      >
-                        ${drink.price.toFixed(2)}
-                      </Typography>
-                    </Paper>
-                  </motion.div>
-                </Box>
-              ))}
-            </Box>
+                  <Image
+                    src={drink.imageUrl || "/images/fallback.jpg"}
+                    alt={drink.name}
+                    width={160}
+                    height={160}
+                    style={{ borderRadius: 12, objectFit: "cover" }}
+                  />
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    sx={{ mt: 1 }}
+                  >
+                    {drink.name}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      mt: 0.5,
+                      color: "#5a4a3c",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {drink.description}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    fontWeight={700}
+                    sx={{ mt: 1, color: "#3e3028" }}
+                  >
+                    ${drink.price.toFixed(2)}
+                  </Typography>
+                </Paper>
+              </Box>
+            ))}
           </Box>
-        </motion.div>
+        </Box>
       </Box>
     </>
   );
