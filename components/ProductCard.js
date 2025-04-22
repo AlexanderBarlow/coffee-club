@@ -33,41 +33,52 @@ export default function ProductCard({ drink }) {
         sx={{
           borderRadius: 3,
           display: "flex",
-          height: 150,
           p: 2,
           backgroundColor: "#fffdfb",
+          height: {
+            xs: 150,
+            sm: 160,
+            md: 180,
+            lg: 200,
+          },
         }}
       >
-        {/* Left: Image */}
+        {/* Image */}
         <Box
           sx={{
             flexShrink: 0,
-            width: 100,
+            width: {
+              xs: 90,
+              sm: 100,
+              md: 120,
+              lg: 130,
+            },
             height: "100%",
-            borderRadius: 1.5,
+            borderRadius: 2,
             overflow: "hidden",
             mr: 2,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            bgcolor: "#f4f4f4",
           }}
         >
           <Image
             src={drink.imageUrl || "/images/fallback.jpg"}
             alt={drink.name}
-            width={80}
-            height={80}
             loading="lazy"
+            width={120}
+            height={120}
             style={{
               objectFit: "contain",
-              width: "100%",
-              height: "auto",
               maxHeight: "100%",
+              maxWidth: "100%",
+              borderRadius: "8px",
             }}
           />
         </Box>
 
-        {/* Right: Content */}
+        {/* Text Content */}
         <Box
           sx={{
             flexGrow: 1,
@@ -77,28 +88,37 @@ export default function ProductCard({ drink }) {
             overflow: "hidden",
           }}
         >
-          <Box>
+          <Box sx={{ pr: 1 }}>
             <Typography
               variant="h6"
               fontWeight={700}
               color="#3e3028"
               sx={{
-                lineHeight: 1.2,
-                whiteSpace: "nowrap",
+                lineHeight: 1.3,
+                fontSize: { xs: "1rem", md: "1.1rem", lg: "1.2rem" },
+                maxHeight: 48,
                 overflow: "hidden",
                 textOverflow: "ellipsis",
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
               }}
             >
               {drink.name}
             </Typography>
+
             <Typography
               variant="body2"
               color="text.secondary"
               sx={{
                 mt: 0.5,
+                fontSize: { xs: "0.8rem", sm: "0.85rem", md: "0.9rem" },
                 maxHeight: 40,
                 overflow: "hidden",
                 textOverflow: "ellipsis",
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
               }}
             >
               {drink.description}
@@ -111,7 +131,11 @@ export default function ProductCard({ drink }) {
             justifyContent="space-between"
             alignItems="center"
           >
-            <Typography fontWeight={600} fontSize="1rem" color="#6f4e37">
+            <Typography
+              fontWeight={600}
+              fontSize={{ xs: "1rem", sm: "1.05rem" }}
+              color="#6f4e37"
+            >
               ${drink.price.toFixed(2)}
             </Typography>
 
