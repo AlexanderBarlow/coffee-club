@@ -1,3 +1,4 @@
+// context/CartContext.js
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
@@ -6,22 +7,21 @@ const CartContext = createContext();
 
 export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
-  const [isLoaded, setIsLoaded] = useState(false); // ✅ NEW
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("cart");
     if (stored) {
       setCart(JSON.parse(stored));
     }
-    setIsLoaded(true); // ✅ Signal that the cart has been initialized
+    setIsLoaded(true);
   }, []);
 
-  const addToCart = (item) => {
-    setCart((prevCart) => {
-      const updated = [...prevCart, item];
-      localStorage.setItem("cart", JSON.stringify(updated));
-      return updated;
-    });
+  const addToCart = async (item) => {
+    const updated = [...cart, item];
+    setCart(updated);
+    localStorage.setItem("cart", JSON.stringify(updated));
+    return Promise.resolve(); // ✅ So it can be awaited
   };
 
   const removeFromCart = (index) => {
@@ -31,7 +31,9 @@ export function CartProvider({ children }) {
   };
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, isLoaded }}>
+    <CartContext.Provider
+      value={{ cart, addToCart, removeFromCart, isLoaded, setCart }}
+    >
       {children}
     </CartContext.Provider>
   );

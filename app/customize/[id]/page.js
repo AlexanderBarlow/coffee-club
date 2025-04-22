@@ -21,6 +21,8 @@ import {
 import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
 import ResponsiveNavbar from "@/components/MobileNavbar";
+import AddToCartButton from "@/components/AddToCartButton";
+
 
 export default function CustomizePage() {
 	const { id } = useParams();
@@ -63,17 +65,6 @@ export default function CustomizePage() {
 		checkAuthAndFetch();
 	}, [id, router]);
 
-	const handleAddToCart = () => {
-		const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-
-		cart.push({
-			...drink,
-			customization,
-		});
-
-		localStorage.setItem("cart", JSON.stringify(cart));
-		router.push("/cart");
-	};
 
 	if (loading) return <CircularProgress sx={{ mt: 5 }} />;
 
@@ -87,7 +78,7 @@ export default function CustomizePage() {
 
 	return (
     <>
-	<ResponsiveNavbar />
+      <ResponsiveNavbar />
       <Box
         sx={{
           px: 2,
@@ -276,24 +267,7 @@ export default function CustomizePage() {
             Total: ${drink.price.toFixed(2)}
           </Typography>
 
-          <Button
-            variant="contained"
-            fullWidth
-            sx={{
-              mt: 1,
-              py: 1.5,
-              borderRadius: 2,
-              backgroundColor: "#6f4e37",
-              fontWeight: 600,
-              fontSize: "1rem",
-              "&:hover": {
-                backgroundColor: "#5c3e2e",
-              },
-            }}
-            onClick={handleAddToCart}
-          >
-            Add to Cart
-          </Button>
+          <AddToCartButton drink={drink} customization={customization} />
         </Paper>
       </Box>
     </>
