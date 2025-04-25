@@ -9,6 +9,7 @@ import {
   Divider,
   IconButton,
   CircularProgress,
+  Skeleton,
 } from "@mui/material";
 import { Delete } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
@@ -18,14 +19,6 @@ import ResponsiveNavbar from "@/components/MobileNavbar";
 export default function CartPage() {
   const { cart = [], isLoaded, removeFromCart } = useCart();
   const router = useRouter();
-
-  if (!isLoaded) {
-    return (
-      <Box sx={{ mt: 10, textAlign: "center" }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
 
   const subtotal = cart.reduce((acc, item) => acc + (item?.price || 0), 0);
 
@@ -56,7 +49,53 @@ export default function CartPage() {
           🛒 Your Cart
         </Typography>
 
-        {cart.length === 0 ? (
+        {!isLoaded ? (
+          <>
+            {[...Array(3)].map((_, idx) => (
+              <Paper
+                key={idx}
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  alignItems: "flex-start",
+                  mb: 3,
+                  p: 2,
+                  borderRadius: 4,
+                  backgroundColor: "#fff",
+                  boxShadow: "0 3px 12px rgba(0,0,0,0.05)",
+                }}
+              >
+                <Skeleton
+                  variant="rectangular"
+                  width={100}
+                  height={100}
+                  sx={{ borderRadius: 2 }}
+                />
+                <Box flex={1}>
+                  <Skeleton
+                    variant="text"
+                    width="70%"
+                    height={28}
+                    sx={{ mb: 1 }}
+                  />
+                  <Skeleton
+                    variant="text"
+                    width="50%"
+                    height={20}
+                    sx={{ mb: 0.5 }}
+                  />
+                  <Skeleton
+                    variant="text"
+                    width="40%"
+                    height={20}
+                    sx={{ mb: 0.5 }}
+                  />
+                  <Skeleton variant="text" width="30%" height={20} />
+                </Box>
+              </Paper>
+            ))}
+          </>
+        ) : cart.length === 0 ? (
           <Typography
             sx={{
               color: "#8c7b75",
