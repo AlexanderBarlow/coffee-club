@@ -3,13 +3,21 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export async function GET(req) {
-
 	const { searchParams } = new URL(req.url);
 	const category = searchParams.get("category");
 
 	try {
 		const drinks = await prisma.drink.findMany({
-			where: category ? { category } : {}, // ✅ Only apply filter if category exists
+			where: category
+				? {
+						category: {
+							name: category, // ✅ Correct: search by related Category's name
+						},
+				  }
+				: {},
+			include: {
+				category: true, // Optional: include category info if you want it
+			},
 		});
 
 		return new Response(JSON.stringify(drinks), {

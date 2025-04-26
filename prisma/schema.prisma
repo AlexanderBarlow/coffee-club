@@ -14,71 +14,22 @@ model User {
   points    Int      @default(0)
   isAdmin   Boolean  @default(false)
   orders    Order[]
-  reviews   Review[]    // User can leave multiple reviews
+  reviews   Review[]
   createdAt DateTime @default(now())
 }
 
 model Order {
-  id            String        @id @default(uuid())
-  user          User          @relation(fields: [userId], references: [id])
-  userId        String
+  id             String        @id @default(uuid())
+  user           User          @relation(fields: [userId], references: [id])
+  userId         String
   stripeSessionId String
-  items         Json
-  total         Float
-  status        OrderStatus   @default(PENDING)
-  paymentStatus PaymentStatus @default(UNPAID)
-  review        Review?       // Each order can have one review
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-}
-
-model TempCheckout {
-  id        String   @id @default(uuid())
-  userId    String
-  cart      Json
-  createdAt DateTime @default(now())
-}
-
-model Drink {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  description String
-  price       Float
-  category    String
-  imageUrl    String?
-  available   Boolean  @default(true)
-  featured    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-
-  syrups Syrup[] @relation("DrinkSyrups")
-  sauces Sauce[] @relation("DrinkSauces")
-  milks  Milk[]  @relation("DrinkMilks")
-}
-
-model Syrup {
-  id          String  @id @default(uuid())
-  name        String  @unique
-  drinks      Drink[] @relation("DrinkSyrups")
-  brand       String
-  description String
-}
-
-model Sauce {
-  id          String  @id @default(uuid())
-  name        String  @unique
-  drinks      Drink[] @relation("DrinkSauces")
-  brand       String
-  description String
-}
-
-model Milk {
-  id          String  @id @default(uuid())
-  name        String  @unique
-  emoji       String? // Optional: for UI use
-  drinks      Drink[] @relation("DrinkMilks")
-  raw         Boolean @default(false)
-  brand       String
-  description String
+  items          Json
+  total          Float
+  status         OrderStatus   @default(PENDING)
+  paymentStatus  PaymentStatus @default(UNPAID)
+  review         Review?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 }
 
 model Review {
@@ -92,6 +43,68 @@ model Review {
   createdAt DateTime @default(now())
 }
 
+model TempCheckout {
+  id        String   @id @default(uuid())
+  userId    String
+  cart      Json
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  emoji       String?  // 👈 ADD THIS LINE
+  description String?
+  createdAt   DateTime @default(now())
+  drinks      Drink[]
+}
+
+
+model Drink {
+  id              String   @id @default(uuid())
+  name            String   @unique
+  description     String
+  price           Float
+  imageUrl        String?
+  available       Boolean  @default(true)
+  featured        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  customizeOptions Json?   // controls allowed customization per drink
+
+  // Relations
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  syrups Syrup[] @relation("DrinkSyrups")
+  sauces Sauce[] @relation("DrinkSauces")
+  milks  Milk[]  @relation("DrinkMilks")
+}
+
+model Syrup {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  brand       String
+  description String
+  drinks      Drink[] @relation("DrinkSyrups")
+}
+
+model Sauce {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  brand       String
+  description String
+  drinks      Drink[] @relation("DrinkSauces")
+}
+
+model Milk {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  emoji       String?
+  brand       String
+  description String
+  raw         Boolean @default(false)
+  drinks      Drink[] @relation("DrinkMilks")
+}
 
 model Rewards {
   id          String   @id @default(uuid())
