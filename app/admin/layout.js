@@ -67,11 +67,10 @@ export default function AdminLayout({ children }) {
         setLoading(false);
       }
     };
-
     checkAuth();
   }, [router]);
 
-  if (loading) return null; // Optional: Loading spinner here
+  if (loading) return null;
 
   const drawer = (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -91,7 +90,7 @@ export default function AdminLayout({ children }) {
           </ListItem>
         ))}
       </List>
-      <Divider sx={{ my: 2 }} />
+      <Divider />
       <Box sx={{ p: 1 }}>
         <ListItemButton
           onClick={async () => {
@@ -115,11 +114,16 @@ export default function AdminLayout({ children }) {
 
   return (
     <Box
-      sx={{ display: "flex", minHeight: "100vh", backgroundColor: "#fdf8f4" }}
+      sx={{
+        display: "flex",
+        minHeight: "100vh",
+        overflowX: "hidden",
+        backgroundColor: "#fdf8f4",
+      }}
     >
       <CssBaseline />
 
-      {/* Top AppBar */}
+      {/* App Bar */}
       <AppBar
         position="fixed"
         sx={{
@@ -143,7 +147,7 @@ export default function AdminLayout({ children }) {
         </Toolbar>
       </AppBar>
 
-      {/* Sidebar */}
+      {/* Sidebar Navigation */}
       <Box
         component="nav"
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
@@ -158,8 +162,8 @@ export default function AdminLayout({ children }) {
           sx={{
             display: { xs: "block", sm: "none" },
             "& .MuiDrawer-paper": {
-              width: drawerWidth,
               boxSizing: "border-box",
+              width: drawerWidth,
               backgroundColor: "#fff",
             },
           }}
@@ -173,8 +177,8 @@ export default function AdminLayout({ children }) {
           sx={{
             display: { xs: "none", sm: "block" },
             "& .MuiDrawer-paper": {
-              width: drawerWidth,
               boxSizing: "border-box",
+              width: drawerWidth,
               backgroundColor: "#fff",
             },
           }}
@@ -189,9 +193,10 @@ export default function AdminLayout({ children }) {
         component="main"
         sx={{
           flexGrow: 1,
+          width: { xs: "100%", sm: `calc(100% - ${drawerWidth}px)` },
           p: { xs: 2, md: 4 },
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          mt: { xs: 8, sm: 8 },
+          mt: 8,
+          overflowX: "hidden",
         }}
       >
         {children}
