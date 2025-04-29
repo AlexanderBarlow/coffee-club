@@ -11,15 +11,23 @@ export async function GET(req) {
 			where: category
 				? {
 						category: {
+<<<<<<< HEAD
 							name: category,
+=======
+							name: category, // ✅ Correct: search by related Category's name
+>>>>>>> 4614f86 (initial commit)
 						},
 				  }
 				: {},
 			include: {
+<<<<<<< HEAD
 				category: true,
 				syrups: true, // 🧠 directly include syrups
 				sauces: true, // 🧠 directly include sauces
 				milks: true, // 🧠 directly include milks
+=======
+				category: true, // Optional: include category info if you want it
+>>>>>>> 4614f86 (initial commit)
 			},
 		});
 
