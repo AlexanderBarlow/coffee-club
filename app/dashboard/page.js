@@ -166,14 +166,20 @@ export default function DashboardPage() {
             <Typography>No orders yet.</Typography>
           ) : (
             orders.slice(0, 3).map((order) => (
-              <Paper
+              <Box
                 key={order.id}
+                onClick={() => router.push(`/orders/${order.id}`)}
                 sx={{
                   mb: 2,
                   p: 2,
                   borderRadius: 3,
                   backgroundColor: "#fff",
                   boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+                  cursor: "pointer",
+                  transition: "transform 0.2s ease",
+                  "&:hover": {
+                    transform: "scale(1.02)",
+                  },
                 }}
               >
                 <Typography fontWeight={600}>
@@ -203,9 +209,10 @@ export default function DashboardPage() {
                   </Box>
                 ))}
                 <Typography fontWeight={600}>Total: ${order.total}</Typography>
-              </Paper>
+              </Box>
             ))
           )}
+
         </motion.div>
 
         {/* Featured Drinks */}
