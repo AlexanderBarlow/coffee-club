@@ -64,86 +64,92 @@ export default function MenuPage() {
       {/* Floating Category Selector */}
       <Box
         sx={{
-          position: "relative",
-          top: 20,
+          position: "sticky",
+          top: 70,
           zIndex: 10,
           pb: 2,
           pt: 4,
+          backgroundColor: "#fef8f2",
         }}
       >
         <Container maxWidth="md">
-          <Box
-            sx={{
-              overflowX: { xs: "auto", sm: "visible" }, // 👈 mobile scroll
-              display: "flex",
-              flexWrap: { xs: "nowrap", sm: "wrap" },    // 👈 no-wrap on mobile, wrap on desktop
-              gap: 1.5,
-              justifyContent: { xs: "start", sm: "center" },
-              position: "relative",
-              scrollbarWidth: "none",       // Firefox
-              "&::-webkit-scrollbar": {     // Chrome/Safari
-                display: "none",
-              },
-              px: { xs: 1, sm: 0 },          // padding left/right on mobile
-            }}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            {categories.map((cat) => (
-              <Box key={cat.key} sx={{ position: "relative", flexShrink: 0 }}>
-                {selectedCategory === cat.key && (
-                  <motion.div
-                    layoutId="activeCategory"
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      borderRadius: 13,
-                      backgroundColor: "#6f4e37",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                      zIndex: 0,
-                    }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 500,
-                      damping: 30,
-                      mass: 0.4,
-                    }}
-                  />
-                )}
+            <Box
+              sx={{
+                overflowX: { xs: "auto", sm: "visible" },
+                display: "flex",
+                flexWrap: { xs: "nowrap", sm: "wrap" },
+                gap: 1.5,
+                justifyContent: { xs: "start", sm: "center" },
+                position: "relative",
+                scrollbarWidth: "none",
+                "&::-webkit-scrollbar": {
+                  display: "none",
+                },
+                px: { xs: 1, sm: 0 },
+              }}
+            >
+              {categories.map((cat) => (
+                <Box key={cat.key} sx={{ position: "relative", flexShrink: 0 }}>
+                  {selectedCategory === cat.key && (
+                    <motion.div
+                      layoutId="activeCategory"
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        borderRadius: 13,
+                        backgroundColor: "#6f4e37",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                        zIndex: 0,
+                      }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 30,
+                        mass: 0.4,
+                      }}
+                    />
+                  )}
 
-                <MuiButton
-                  component={motion.button}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleCategoryChange(cat.key)}
-                  variant="outlined"
-                  sx={{
-                    zIndex: 1,
-                    position: "relative",
-                    minWidth: 120,
-                    backgroundColor: "transparent",
-                    color: selectedCategory === cat.key ? "#fff" : "#6f4e37",
-                    borderColor: "#6f4e37",
-                    fontWeight: 600,
-                    textTransform: "none",
-                    px: 2,
-                    py: 1,
-                    flexShrink: 0,
-                    "&:hover": {
+                  <MuiButton
+                    component={motion.button}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleCategoryChange(cat.key)}
+                    variant="outlined"
+                    sx={{
+                      zIndex: 1,
+                      position: "relative",
                       backgroundColor: "transparent",
-                    },
-                  }}
-                >
-                  {cat.label}
-                </MuiButton>
-              </Box>
-            ))}
-          </Box>
-
+                      color: selectedCategory === cat.key ? "#fff" : "#6f4e37",
+                      borderColor: "#6f4e37",
+                      fontWeight: 600,
+                      textTransform: "none",
+                      px: 2,
+                      py: 1,
+                      minWidth: 100,
+                      flexShrink: 0,
+                      "&:hover": {
+                        backgroundColor: "transparent",
+                      },
+                    }}
+                  >
+                    {cat.label}
+                  </MuiButton>
+                </Box>
+              ))}
+            </Box>
+          </motion.div>
         </Container>
       </Box>
 
-      {/* Drinks */}
+      {/* Drinks List */}
       <Container maxWidth="md">
         <Typography
           variant="h4"
@@ -162,7 +168,11 @@ export default function MenuPage() {
           {loading
             ? [...Array(6)].map((_, idx) => (
               <Grid item xs={12} sm={6} key={idx}>
-                <Skeleton variant="rectangular" height={180} sx={{ borderRadius: 3 }} />
+                <Skeleton
+                  variant="rectangular"
+                  height={180}
+                  sx={{ borderRadius: 3 }}
+                />
               </Grid>
             ))
             : drinks.map((drink, idx) => (
@@ -177,7 +187,6 @@ export default function MenuPage() {
               </Grid>
             ))}
         </Grid>
-
       </Container>
     </Box>
   );

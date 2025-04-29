@@ -11,15 +11,12 @@ export async function GET(req) {
 			where: category
 				? {
 						category: {
-							name: category,
+							name: category, // ✅ Correct: search by related Category's name
 						},
 				  }
 				: {},
 			include: {
-				category: true,
-				syrups: true, // 🧠 directly include syrups
-				sauces: true, // 🧠 directly include sauces
-				milks: true, // 🧠 directly include milks
+				category: true, // Optional: include category info if you want it
 			},
 		});
 
