@@ -29,6 +29,7 @@ import { supabase } from "@/lib/supabaseClient";
 const drawerWidth = 240;
 
 const menuItems = [
+	{ label: "Home", icon: <ReceiptIcon />, route: "/admin" },
 	{ label: "Orders", icon: <ReceiptIcon />, route: "/admin/orders" },
 	{ label: "Menu Editor", icon: <LocalCafeIcon />, route: "/admin/menu/edit" },
 	{
