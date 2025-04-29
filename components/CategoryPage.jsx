@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
 import {
   Box,
   Typography,
@@ -10,42 +11,53 @@ import {
 } from "@mui/material";
 import ProductCard from "@/components/ProductCard";
 import BottomTabBar from "@/components/MobileNavbar";
-import { useRouter } from "next/navigation";
-import Button from "@/components/Button";
 
 const categories = [
-  { key: "iced", label: "🧊 Iced", emoji: "🧊" },
-  { key: "hot", label: "🔥 Hot", emoji: "🔥" },
-  { key: "espresso", label: "☕ Espresso", emoji: "☕" },
-  { key: "tea", label: "🍵 Tea", emoji: "🍵" },
-  { key: "grub", label: "🍨 Grub", emoji: "🍨" },
+  { key: "iced", label: "🧊 Iced" },
+  { key: "hot", label: "🔥 Hot" },
+  { key: "espresso", label: "☕ Espresso" },
+  { key: "frappes", label: "🍧 Frappes" },
+  { key: "tea", label: "🍵 Tea" },
+  { key: "grub", label: "🍽️ Grub" },
 ];
 
-export default function CategoryPage({ initialCategory = "iced" }) {
-  const [currentCategory, setCurrentCategory] = useState(initialCategory);
+export default function CategoryPage() {
+  const { slug } = useParams(); // 'slug' from URL
+  const router = useRouter();
   const [drinks, setDrinks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
     const fetchDrinks = async () => {
+      if (!slug) return;
       setLoading(true);
-      const res = await fetch(`/api/drinks?category=${currentCategory}`);
-      const data = await res.json();
-      setDrinks(data);
-      setLoading(false);
+      try {
+        const res = await fetch(`/api/drinks?category=${slug}`);
+        const data = await res.json();
+        setDrinks(data);
+      } catch (err) {
+        console.error("Failed to fetch drinks:", err);
+      } finally {
+        setLoading(false);
+      }
     };
+
     fetchDrinks();
-  }, [currentCategory]);
+  }, [slug]);
+
+  const handleCategoryClick = (categoryKey) => {
+    router.push(`/category/${categoryKey}`);
+  };
 
   const handleCustomize = (drink) => {
     router.push(`/customize/${drink.id}`);
   };
 
+  const currentCategoryLabel = categories.find((c) => c.key === slug)?.label || "";
+
   return (
     <Box sx={{ backgroundColor: "#fef8f2", minHeight: "100vh" }}>
       <BottomTabBar />
-
 
       <Container maxWidth="md" sx={{ pt: 2, pb: { xs: 12, sm: 14 } }}>
         {/* Categories Selector */}
@@ -61,23 +73,20 @@ export default function CategoryPage({ initialCategory = "iced" }) {
           {categories.map((cat) => (
             <MuiButton
               key={cat.key}
-              variant={currentCategory === cat.key ? "contained" : "outlined"}
+              variant={slug === cat.key ? "contained" : "outlined"}
               size="small"
+              onClick={() => handleCategoryClick(cat.key)}
               sx={{
-                backgroundColor:
-                  currentCategory === cat.key ? "#6f4e37" : "#fff",
-                color: currentCategory === cat.key ? "#fff" : "#6f4e37",
+                backgroundColor: slug === cat.key ? "#6f4e37" : "#fff",
+                color: slug === cat.key ? "#fff" : "#6f4e37",
                 borderColor: "#6f4e37",
                 fontWeight: 600,
                 textTransform: "none",
                 "&:hover": {
-                  backgroundColor:
-                    currentCategory === cat.key ? "#5c3e2e" : "#f9f3ef",
+                  backgroundColor: slug === cat.key ? "#5c3e2e" : "#f9f3ef",
                 },
               }}
-              onClick={() => setCurrentCategory(cat.key)}
             >
-              {" "}
               {cat.label}
             </MuiButton>
           ))}
@@ -93,7 +102,7 @@ export default function CategoryPage({ initialCategory = "iced" }) {
             color: "#6f4e37",
           }}
         >
-          {categories.find((c) => c.key === currentCategory)?.label}
+          {currentCategoryLabel}
         </Typography>
 
         {/* Drink Grid */}

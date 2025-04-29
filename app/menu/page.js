@@ -1,111 +1,184 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   Box,
   Typography,
+  Container,
+  Button as MuiButton,
   Grid,
-  Card,
-  CardContent,
-  useTheme,
+  Skeleton,
 } from "@mui/material";
-import { motion } from "framer-motion";
+import ProductCard from "@/components/ProductCard";
 import BottomTabBar from "@/components/MobileNavbar";
+import { useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
 
-const menuCategories = [
-  { title: "Iced Coffees", emoji: "🧊", link: "/icedcoffee" },
-  { title: "Hot Coffees", emoji: "☕", link: "/hotcoffee" },
-  { title: "Espresso", emoji: "⚡", link: "/espresso" },
-  { title: "Frappes", emoji: "🍧", link: "/frappes" },
-  { title: "Tea", emoji: "🍵", link: "/tea" },
-  { title: "Grub", emoji: "🍽️", link: "/grub" },
+const categories = [
+  { key: "iced", label: "🧊 Iced" },
+  { key: "hot", label: "🔥 Hot" },
+  { key: "espresso", label: "☕ Espresso" },
+  { key: "frappes", label: "🍧 Frappes" },
+  { key: "tea", label: "🍵 Tea" },
+  { key: "grub", label: "🍽️ Grub" },
 ];
 
 export default function MenuPage() {
   const router = useRouter();
-  const theme = useTheme();
+  const searchParams = useSearchParams();
+  const categoryFromUrl = searchParams.get("category") || "iced";
+
+  const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl);
+  const [drinks, setDrinks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch drinks
+  useEffect(() => {
+    const fetchDrinks = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/drinks?category=${selectedCategory}`);
+        const data = await res.json();
+        setDrinks(data);
+      } catch (err) {
+        console.error("Failed to fetch drinks:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDrinks();
+  }, [selectedCategory]);
+
+  const handleCategoryChange = (categoryKey) => {
+    setSelectedCategory(categoryKey);
+    const params = new URLSearchParams(window.location.search);
+    params.set("category", categoryKey);
+    router.push(`/menu?${params.toString()}`);
+  };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        background: "linear-gradient(to bottom, #fffaf7, #fefefe)",
-        paddingBottom: 10,
-      }}
-    >
+    <Box sx={{ backgroundColor: "#fef8f2", minHeight: "100vh", pb: 10 }}>
       <BottomTabBar />
 
-      <Box sx={{ px:3, pb: 6, pt: 2 }}>
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <Typography
-            variant="h3"
-            fontWeight={700}
-            textAlign="center"
-            sx={{ color: "#6f4e37" }}
+      {/* Floating Category Selector */}
+      <Box
+        sx={{
+          position: "relative",
+          top: 20,
+          zIndex: 10,
+          pb: 2,
+          pt: 4,
+        }}
+      >
+        <Container maxWidth="md">
+          <Box
+            sx={{
+              overflowX: { xs: "auto", sm: "visible" }, // 👈 mobile scroll
+              display: "flex",
+              flexWrap: { xs: "nowrap", sm: "wrap" },    // 👈 no-wrap on mobile, wrap on desktop
+              gap: 1.5,
+              justifyContent: { xs: "start", sm: "center" },
+              position: "relative",
+              scrollbarWidth: "none",       // Firefox
+              "&::-webkit-scrollbar": {     // Chrome/Safari
+                display: "none",
+              },
+              px: { xs: 1, sm: 0 },          // padding left/right on mobile
+            }}
           >
-            Our Crafted Menu
-          </Typography>
-          <Typography
-            variant="body1"
-            textAlign="center"
-            sx={{ mt: 1, color: "#6f4e37", opacity: 0.7 }}
-          >
-            Explore our full lineup of drinks and bites
-          </Typography>
-        </motion.div>
+            {categories.map((cat) => (
+              <Box key={cat.key} sx={{ position: "relative", flexShrink: 0 }}>
+                {selectedCategory === cat.key && (
+                  <motion.div
+                    layoutId="activeCategory"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      borderRadius: 13,
+                      backgroundColor: "#6f4e37",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                      zIndex: 0,
+                    }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 30,
+                      mass: 0.4,
+                    }}
+                  />
+                )}
 
-        <Grid container spacing={3} sx={{ mt: 4 }}>
-          {menuCategories.map((category, i) => (
-            <Grid item xs={6} sm={4} key={category.title}>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                whileHover={{ scale: 1.05, rotate: -1 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                <Card
-                  onClick={() => router.push(category.link)}
+                <MuiButton
+                  component={motion.button}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleCategoryChange(cat.key)}
+                  variant="outlined"
                   sx={{
-                    borderRadius: 5,
-                    py: 3,
+                    zIndex: 1,
+                    position: "relative",
+                    minWidth: 120,
+                    backgroundColor: "transparent",
+                    color: selectedCategory === cat.key ? "#fff" : "#6f4e37",
+                    borderColor: "#6f4e37",
+                    fontWeight: 600,
+                    textTransform: "none",
                     px: 2,
-                    textAlign: "center",
-                    background: "#fff",
-                    cursor: "pointer",
-                    transition: "all 0.3s ease",
-                    boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
+                    py: 1,
+                    flexShrink: 0,
                     "&:hover": {
-                      background: "#fef4ec",
-                      boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
+                      backgroundColor: "transparent",
                     },
                   }}
                 >
-                  <CardContent>
-                    <motion.div
-                      animate={{ y: [0, -3, 0] }}
-                      transition={{ repeat: Infinity, duration: 2 }}
-                    >
-                      <Typography fontSize={38}>{category.emoji}</Typography>
-                    </motion.div>
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={600}
-                      sx={{ mt: 1, color: "#3e3028" }}
-                    >
-                      {category.title}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </Grid>
-          ))}
-        </Grid>
+                  {cat.label}
+                </MuiButton>
+              </Box>
+            ))}
+          </Box>
+
+        </Container>
       </Box>
+
+      {/* Drinks */}
+      <Container maxWidth="md">
+        <Typography
+          variant="h4"
+          fontWeight={700}
+          sx={{
+            mt: 4,
+            mb: 3,
+            textAlign: "center",
+            color: "#6f4e37",
+          }}
+        >
+          {categories.find((c) => c.key === selectedCategory)?.label}
+        </Typography>
+
+        <Grid container spacing={3}>
+          {loading
+            ? [...Array(6)].map((_, idx) => (
+              <Grid item xs={12} sm={6} key={idx}>
+                <Skeleton variant="rectangular" height={180} sx={{ borderRadius: 3 }} />
+              </Grid>
+            ))
+            : drinks.map((drink, idx) => (
+              <Grid item xs={12} sm={6} key={drink.id}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                >
+                  <ProductCard drink={drink} />
+                </motion.div>
+              </Grid>
+            ))}
+        </Grid>
+
+      </Container>
     </Box>
   );
 }
