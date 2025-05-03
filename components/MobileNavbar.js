@@ -20,14 +20,17 @@ import {
   Box,
   Typography,
 } from "@mui/material";
+
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/HomeRounded";
 import LocalCafeIcon from "@mui/icons-material/LocalCafeRounded";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEventsRounded";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCartRounded";
 import LogoutIcon from "@mui/icons-material/LogoutRounded";
+import PersonIcon from "@mui/icons-material/PersonRounded";
+import RateReviewIcon from "@mui/icons-material/RateReviewRounded";
+
 import { supabase } from "@/lib/supabaseClient";
-import { motion } from "framer-motion";
 
 const getCartItemCount = () => {
   if (typeof window !== "undefined") {
@@ -37,7 +40,7 @@ const getCartItemCount = () => {
   return 0;
 };
 
-export default function ResponsiveNavbar() {
+export default function ResponsiveNavbar({ visible = true }) {
   const pathname = usePathname();
   const router = useRouter();
   const theme = useTheme();
@@ -55,15 +58,12 @@ export default function ResponsiveNavbar() {
   const authNavItems = [
     ...navItems,
     { label: "Rewards", icon: <EmojiEventsIcon />, path: "/rewards" },
-    { label: "Profile", icon: <EmojiEventsIcon />, path: "/dashboard" },
+    { label: "Dashboard", icon: <PersonIcon />, path: "/dashboard" },
+    { label: "Reviews", icon: <RateReviewIcon />, path: "/reviews" },
     {
       label: "Cart",
       icon: (
-        <Badge
-          badgeContent={cartCount}
-          color="error"
-          invisible={cartCount === 0}
-        >
+        <Badge badgeContent={cartCount} color="error" invisible={cartCount === 0}>
           <ShoppingCartIcon />
         </Badge>
       ),
@@ -156,6 +156,7 @@ export default function ResponsiveNavbar() {
           )}
         </Toolbar>
       </AppBar>
+
       {/* Mobile Drawer */}
       <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer}>
         <List sx={{ width: 250, paddingTop: 8 }}>

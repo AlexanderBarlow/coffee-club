@@ -1,3 +1,4 @@
+// File: app/dashboard/page.js
 "use client";
 
 import { useEffect, useState } from "react";
@@ -10,10 +11,9 @@ import {
   LinearProgress,
   Avatar,
   Skeleton,
-  IconButton,
   useMediaQuery,
+  Rating,
 } from "@mui/material";
-import LogoutIcon from "@mui/icons-material/Logout";
 import BottomTabBar from "@/components/MobileNavbar";
 import Image from "next/image";
 import { useKeenSlider } from "keen-slider/react";
@@ -31,9 +31,9 @@ export default function DashboardPage() {
   const [userData, setUserData] = useState(null);
   const [orders, setOrders] = useState([]);
   const [featuredDrinks, setFeaturedDrinks] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-
   const isMobile = useMediaQuery("(max-width:600px)");
 
   const [sliderRef] = useKeenSlider({
@@ -54,15 +54,24 @@ export default function DashboardPage() {
 
       if (!session) return router.push("/login");
 
-      const [userRes, ordersRes, drinksRes] = await Promise.all([
+      const [userRes, ordersRes, drinksRes, reviewsRes] = await Promise.all([
         fetch(`/api/user/${session.user.id}`),
         fetch(`/api/user/${session.user.id}/orders`),
         fetch("/api/drinks/featured"),
+        fetch(`/api/user/${session.user.id}/reviews`),
       ]);
 
-      setUserData(await userRes.json());
-      setOrders(await ordersRes.json());
-      setFeaturedDrinks(await drinksRes.json());
+      const [userData, orderData, drinkData, reviewData] = await Promise.all([
+        userRes.json(),
+        ordersRes.json(),
+        drinksRes.json(),
+        reviewsRes.json(),
+      ]);
+
+      setUserData(userData);
+      setOrders(orderData);
+      setFeaturedDrinks(drinkData);
+      setReviews(reviewData);
       setLoading(false);
     };
 
@@ -90,149 +99,112 @@ export default function DashboardPage() {
           color: "#3e3028",
         }}
       >
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+        {/* User Info */}
+        <Paper
+          elevation={4}
+          sx={{
+            borderRadius: 4,
+            p: 3,
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            backgroundColor: "#ffffff",
+            mb: 3,
+            flexDirection: isMobile ? "column" : "row",
+            textAlign: isMobile ? "center" : "left",
+          }}
         >
-          <Paper
-            elevation={4}
-            sx={{
-              borderRadius: 4,
-              p: 3,
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
-              backgroundColor: "#ffffff",
-              mb: 3,
-              flexDirection: isMobile ? "column" : "row",
-              textAlign: isMobile ? "center" : "left",
-            }}
-          >
-            <Avatar sx={{ width: 56, height: 56, bgcolor: "#6f4e37" }}>
-              @
-            </Avatar>
-            <Box flex={1}>
-              <Typography variant="h6" fontWeight={700}>
-                @{email?.split("@")[0] || <Skeleton width={80} />}
-              </Typography>
-              <Typography
-                variant="caption"
-                fontWeight={600}
-                sx={{
-                  backgroundColor: tier === "VIP" ? "#FFD700" : "#e6d3c0",
-                  px: 2,
-                  py: 0.5,
-                  borderRadius: 99,
-                  mt: 0.5,
-                  display: "inline-block",
-                }}
-              >
-                {tier || <Skeleton width={40} />}
-              </Typography>
-            </Box>
-          </Paper>
-        </motion.div>
-
-        {/* Progress */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Box sx={{ mb: 4 }}>
-            <Typography fontWeight={500}>
-              {points} / {current.max} points to {current.next ?? "stay VIP"}
+          <Avatar sx={{ width: 56, height: 56, bgcolor: "#6f4e37" }}>@</Avatar>
+          <Box flex={1}>
+            <Typography variant="h6" fontWeight={700}>
+              @{email?.split("@")[0] || <Skeleton width={80} />}
             </Typography>
-            <LinearProgress
-              variant="determinate"
-              value={progress}
-              sx={{ height: 10, borderRadius: 5, mt: 1 }}
-            />
+            <Typography
+              variant="caption"
+              fontWeight={600}
+              sx={{
+                backgroundColor: tier === "VIP" ? "#FFD700" : "#e6d3c0",
+                px: 2,
+                py: 0.5,
+                borderRadius: 99,
+                mt: 0.5,
+                display: "inline-block",
+              }}
+            >
+              {tier || <Skeleton width={40} />}
+            </Typography>
           </Box>
-        </motion.div>
+        </Paper>
+
+        {/* Progress Bar */}
+        <Box sx={{ mb: 4 }}>
+          <Typography fontWeight={500}>
+            {points} / {current.max} points to {current.next ?? "stay VIP"}
+          </Typography>
+          <LinearProgress
+            variant="determinate"
+            value={progress}
+            sx={{ height: 10, borderRadius: 5, mt: 1 }}
+          />
+        </Box>
 
         {/* Recent Orders */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
-            🧾 Recent Orders
-          </Typography>
-          {orders.length === 0 && !loading ? (
-            <Typography>No orders yet.</Typography>
-          ) : (
-            orders.slice(0, 3).map((order) => (
-              <Box
-                key={order.id}
-                onClick={() => router.push(`/orders/${order.id}`)}
-                sx={{
-                  mb: 2,
-                  p: 2,
-                  borderRadius: 3,
-                  backgroundColor: "#fff",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-                  cursor: "pointer",
-                  transition: "transform 0.2s ease",
-                  "&:hover": {
-                    transform: "scale(1.02)",
-                  },
-                }}
-              >
-                <Typography fontWeight={600}>
-                  {new Date(order.createdAt).toLocaleDateString()}
-                </Typography>
-                {order.items.map((item, idx) => (
-                  <Box
-                    key={idx}
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      mb: 1.5,
-                      gap: 2,
-                    }}
-                  >
-                    <Avatar
-                      src={item.imageUrl}
-                      alt={item.name}
-                      sx={{ width: 48, height: 48 }}
-                    />
-                    <Box>
-                      <Typography fontWeight={500}>{item.name}</Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {item.customization?.size} • {item.customization?.milk}
-                      </Typography>
-                    </Box>
+        <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+          🧾 Recent Orders
+        </Typography>
+        {orders.length === 0 && !loading ? (
+          <Typography>No orders yet.</Typography>
+        ) : (
+          orders.slice(0, 3).map((order) => (
+            <Box
+              key={order.id}
+              onClick={() => router.push(`/orders/${order.id}`)}
+              sx={{
+                mb: 2,
+                p: 2,
+                borderRadius: 3,
+                backgroundColor: "#fff",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+                cursor: "pointer",
+              }}
+            >
+              <Typography fontWeight={600}>
+                {new Date(order.createdAt).toLocaleDateString()}
+              </Typography>
+              {order.items.map((item, idx) => (
+                <Box
+                  key={idx}
+                  sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}
+                >
+                  <Avatar
+                    src={item.imageUrl}
+                    alt={item.name}
+                    sx={{ width: 48, height: 48 }}
+                  />
+                  <Box>
+                    <Typography fontWeight={500}>{item.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {item.customization?.size} • {item.customization?.milk}
+                    </Typography>
                   </Box>
-                ))}
-                <Typography fontWeight={600}>Total: ${order.total}</Typography>
-              </Box>
-            ))
-          )}
-
-        </motion.div>
+                </Box>
+              ))}
+              <Typography fontWeight={600}>Total: ${order.total}</Typography>
+            </Box>
+          ))
+        )}
 
         {/* Featured Drinks */}
         <Box sx={{ mt: 6 }}>
           <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
             🌟 Featured Drinks
           </Typography>
-
           <Box ref={sliderRef} className="keen-slider">
             {featuredDrinks.map((drink) => (
               <Box
                 key={drink.id}
                 className="keen-slider__slide"
-                sx={{
-                  px: 1,
-                  minWidth: 240,
-                  maxWidth: 260,
-                  transform: "translateZ(0)",
-                  willChange: "transform",
-                }}
+                sx={{ px: 1, minWidth: 240, maxWidth: 260 }}
               >
                 <Paper
                   elevation={3}
@@ -244,10 +216,6 @@ export default function DashboardPage() {
                     flexDirection: "column",
                     alignItems: "center",
                     textAlign: "center",
-                    transition: "transform 0.2s ease",
-                    "&:hover": {
-                      transform: "scale(1.03)",
-                    },
                   }}
                 >
                   <Image
@@ -288,6 +256,43 @@ export default function DashboardPage() {
               </Box>
             ))}
           </Box>
+        </Box>
+
+        {/* Reviews */}
+        <Box sx={{ mt: 6 }}>
+          <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+            💬 Your Reviews
+          </Typography>
+          {reviews.length === 0 ? (
+            <Typography>No reviews yet.</Typography>
+          ) : (
+            reviews.map((review) => (
+              <Paper
+                key={review.id}
+                sx={{
+                  mb: 2,
+                  p: 2,
+                  backgroundColor: "#fff",
+                  borderRadius: 3,
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+                }}
+              >
+                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+                  <Typography fontWeight={600}>
+                    Order #{review.orderId.slice(0, 8)}
+                  </Typography>
+                  <Rating value={review.rating} readOnly size="small" />
+                </Box>
+                <Typography
+                  variant="body2"
+                  fontStyle="italic"
+                  sx={{ color: "#5a4a3c" }}
+                >
+                  “{review.comment}”
+                </Typography>
+              </Paper>
+            ))
+          )}
         </Box>
       </Box>
     </>
