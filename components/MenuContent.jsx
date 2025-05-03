@@ -78,7 +78,7 @@ export default function MenuContent() {
           backdropFilter: "blur(10px)",
           backgroundColor: "rgba(254, 248, 242, 0.85)",
           paddingTop: `calc(env(safe-area-inset-top) + 4px)`, // Reduced top padding
-          paddingBottom: 4, // Shorter bottom padding
+          paddingBottom: 1, // Shorter bottom padding
           mb: -4, // Adjust spacing below
           "::before": {
             content: '""',
