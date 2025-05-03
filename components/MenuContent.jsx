@@ -31,6 +31,19 @@ export default function MenuContent() {
   const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl);
   const [drinks, setDrinks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [atTop, setAtTop] = useState(true);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const isAtTop = window.scrollY < 5;
+      setAtTop(isAtTop);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // initial call
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const fetchDrinks = async () => {
@@ -59,90 +72,84 @@ export default function MenuContent() {
     <Box sx={{ backgroundColor: "#fef8f2", minHeight: "100vh", pb: 10 }}>
       <BottomTabBar />
 
-      {/* Floating Category Selector */}
+      {/* Sticky Category Bar */}
       <Box
         sx={{
           position: "sticky",
-          top: 70,
+          top: 0,
           zIndex: 10,
-          pb: 2,
-          pt: 4,
           backgroundColor: "#fef8f2",
+          py: 2,
+          boxShadow: atTop ? "none" : "0px 2px 8px rgba(0,0,0,0.05)",
+          transition: "box-shadow 0.3s ease",
         }}
       >
         <Container maxWidth="md">
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+          <Box
+            sx={{
+              overflowX: { xs: "auto", sm: "visible" },
+              display: "flex",
+              flexWrap: { xs: "nowrap", sm: "wrap" },
+              gap: 1.5,
+              justifyContent: { xs: "start", sm: "center" },
+              scrollbarWidth: "none",
+              "&::-webkit-scrollbar": {
+                display: "none",
+              },
+              px: { xs: 1, sm: 0 },
+            }}
           >
-            <Box
-              sx={{
-                overflowX: { xs: "auto", sm: "visible" },
-                display: "flex",
-                flexWrap: { xs: "nowrap", sm: "wrap" },
-                gap: 1.5,
-                justifyContent: { xs: "start", sm: "center" },
-                position: "relative",
-                scrollbarWidth: "none",
-                "&::-webkit-scrollbar": {
-                  display: "none",
-                },
-                px: { xs: 1, sm: 0 },
-              }}
-            >
-              {categories.map((cat) => (
-                <Box key={cat.key} sx={{ position: "relative", flexShrink: 0 }}>
-                  {selectedCategory === cat.key && (
-                    <motion.div
-                      layoutId="activeCategory"
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        borderRadius: 13,
-                        backgroundColor: "#6f4e37",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                        zIndex: 0,
-                      }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 500,
-                        damping: 30,
-                        mass: 0.4,
-                      }}
-                    />
-                  )}
-                  <MuiButton
-                    component={motion.button}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleCategoryChange(cat.key)}
-                    variant="outlined"
-                    sx={{
-                      zIndex: 1,
-                      position: "relative",
-                      backgroundColor: "transparent",
-                      color: selectedCategory === cat.key ? "#fff" : "#6f4e37",
-                      borderColor: "#6f4e37",
-                      fontWeight: 600,
-                      textTransform: "none",
-                      px: 2,
-                      py: 1,
-                      minWidth: 100,
-                      flexShrink: 0,
-                      "&:hover": {
-                        backgroundColor: "transparent",
-                      },
+            {categories.map((cat) => (
+              <Box key={cat.key} sx={{ position: "relative", flexShrink: 0 }}>
+                {selectedCategory === cat.key && (
+                  <motion.div
+                    layoutId="activeCategory"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      borderRadius: 13,
+                      backgroundColor: "#6f4e37",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                      zIndex: 0,
                     }}
-                  >
-                    {cat.label}
-                  </MuiButton>
-                </Box>
-              ))}
-            </Box>
-          </motion.div>
+                    transition={{
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 30,
+                      mass: 0.4,
+                    }}
+                  />
+                )}
+                <MuiButton
+                  component={motion.button}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleCategoryChange(cat.key)}
+                  variant="outlined"
+                  sx={{
+                    zIndex: 1,
+                    position: "relative",
+                    backgroundColor: "transparent",
+                    color: selectedCategory === cat.key ? "#fff" : "#6f4e37",
+                    borderColor: "#6f4e37",
+                    fontWeight: 600,
+                    textTransform: "none",
+                    px: 2,
+                    py: 1,
+                    minWidth: 100,
+                    flexShrink: 0,
+                    "&:hover": {
+                      backgroundColor: "transparent",
+                    },
+                  }}
+                >
+                  {cat.label}
+                </MuiButton>
+              </Box>
+            ))}
+          </Box>
         </Container>
       </Box>
 

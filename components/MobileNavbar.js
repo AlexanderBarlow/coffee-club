@@ -27,6 +27,7 @@ import EmojiEventsIcon from "@mui/icons-material/EmojiEventsRounded";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCartRounded";
 import LogoutIcon from "@mui/icons-material/LogoutRounded";
 import { supabase } from "@/lib/supabaseClient";
+import { motion } from "framer-motion";
 
 const getCartItemCount = () => {
   if (typeof window !== "undefined") {
