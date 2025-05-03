@@ -69,17 +69,27 @@ export default function MenuContent() {
     <Box sx={{ backgroundColor: "#fef8f2", minHeight: "100vh", pb: 10 }}>
       <BottomTabBar />
 
-      {/* Category Bar */}
+      {/* Sticky bar wrapper with safe area fill */}
       <Box
         sx={{
           position: "sticky",
           top: 0,
-          zIndex: 10,
-          backdropFilter: scrolled ? "blur(10px)" : "none",
-          backgroundColor: scrolled ? "rgba(254, 248, 242, 0.9)" : "#fef8f2",
-          paddingTop: scrolled ? 1 : `calc(env(safe-area-inset-top) + 16px)`,
-          paddingBottom: 2,
-          transition: "all 0.3s ease",
+          zIndex: 1000,
+          backdropFilter: "blur(10px)",
+          backgroundColor: "rgba(254, 248, 242, 0.85)",
+          paddingTop: `calc(env(safe-area-inset-top) + 4px)`, // Reduced top padding
+          paddingBottom: 4, // Shorter bottom padding
+          mb: -4, // Adjust spacing below
+          "::before": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "env(safe-area-inset-top)",
+            backgroundColor: "rgba(254, 248, 242, 0.9)",
+            zIndex: -1,
+          },
         }}
       >
         <Container maxWidth="md">
