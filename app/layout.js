@@ -2,6 +2,8 @@ import "./globals.css";
 import { Poppins } from "next/font/google";
 import ThemeRegistry from "@/components/ThemeRegistry";
 import { CartProvider } from "@/context/CartContext";
+import { OrderStatusProvider } from "@/context/OrderStatusContext";
+import OrderStatusBanner from "@/components/OrderStatusBanner";
 
 const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600", "700"] });
 
@@ -32,7 +34,12 @@ export default function RootLayout({ children }) {
 
       <body className={poppins.className}>
         <CartProvider>
-          <ThemeRegistry>{children}</ThemeRegistry>
+          <OrderStatusProvider>
+            <ThemeRegistry>
+              {children}
+              <OrderStatusBanner />
+            </ThemeRegistry>
+          </OrderStatusProvider>
         </CartProvider>
       </body>
     </html>
