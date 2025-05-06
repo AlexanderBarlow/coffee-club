@@ -30,6 +30,7 @@ model Order {
   review         Review?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+  stored         Boolean       @default(false)
 }
 
 model Review {
