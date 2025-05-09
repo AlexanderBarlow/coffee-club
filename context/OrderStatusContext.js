@@ -22,9 +22,12 @@ export function OrderStatusProvider({ children }) {
                     setUserId(null);
                     setStatus(null);
                     setOrderId(null);
+                    previousOrderId.current = null;
+                    previousStatus.current = null;
                 }
             }
         );
+
 
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session?.user?.id) {
