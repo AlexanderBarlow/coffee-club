@@ -153,15 +153,18 @@ export default function OrderStatusBanner() {
     const [prevBannerKey, setPrevBannerKey] = useState(null);
 
     useEffect(() => {
-        if (!status || !orderId) return;
+        if (!status || !orderId) {
+            setVisibleBanner(null); // ✅ immediately hide banner on logout/reset
+            return;
+        }
 
         const newKey = `${orderId}-${status}`;
-
         if (newKey !== prevBannerKey) {
             setPrevBannerKey(newKey);
             setVisibleBanner({ status, orderId });
         }
     }, [status, orderId]);
+
 
     const handleDone = () => {
         setVisibleBanner(null);
