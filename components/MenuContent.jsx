@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import BottomTabBar from "@/components/MobileNavbar";
 import ProductCard from "@/components/ProductCard";
+import CustomizeModal from "@/components/CustomizeModal";
 
 const categories = [
   { key: "iced", label: "🧊 Iced" },
@@ -30,17 +31,20 @@ export default function MenuContent() {
   const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl);
   const [drinks, setDrinks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [scrolled, setScrolled] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedDrinkId, setSelectedDrinkId] = useState(null);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 0);
-    };
+  const handleCategoryChange = (categoryKey) => {
+    setSelectedCategory(categoryKey);
+    const params = new URLSearchParams(window.location.search);
+    params.set("category", categoryKey);
+    router.push(`/menu?${params.toString()}`);
+  };
 
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const handleCustomize = (drink) => {
+    setSelectedDrinkId(drink.id);
+    setModalOpen(true);
+  };
 
   useEffect(() => {
     const fetchDrinks = async () => {
@@ -58,18 +62,11 @@ export default function MenuContent() {
     fetchDrinks();
   }, [selectedCategory]);
 
-  const handleCategoryChange = (categoryKey) => {
-    setSelectedCategory(categoryKey);
-    const params = new URLSearchParams(window.location.search);
-    params.set("category", categoryKey);
-    router.push(`/menu?${params.toString()}`);
-  };
-
   return (
     <Box sx={{ backgroundColor: "#fef8f2", minHeight: "100vh", pb: 10 }}>
       <BottomTabBar />
 
-      {/* Sticky bar wrapper with safe area fill */}
+      {/* Sticky category bar */}
       <Box
         sx={{
           position: "sticky",
@@ -77,9 +74,9 @@ export default function MenuContent() {
           zIndex: 1000,
           backdropFilter: "blur(10px)",
           backgroundColor: "rgba(254, 248, 242, 0.85)",
-          paddingTop: `calc(env(safe-area-inset-top) + 4px)`, // Reduced top padding
-          paddingBottom: 1, // Shorter bottom padding
-          mb: -4, // Adjust spacing below
+          paddingTop: `calc(env(safe-area-inset-top) + 4px)`,
+          paddingBottom: 1,
+          mb: -4,
           "::before": {
             content: '""',
             position: "absolute",
@@ -166,11 +163,18 @@ export default function MenuContent() {
               ))
             : drinks.map((drink) => (
                 <Grid item xs={12} sm={6} key={drink.id}>
-                  <ProductCard drink={drink} />
+                  <ProductCard drink={drink} onCustomize={handleCustomize} />
                 </Grid>
               ))}
         </Grid>
       </Container>
+
+      {/* Customize Modal */}
+      <CustomizeModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        drinkId={selectedDrinkId}
+      />
     </Box>
   );
 }

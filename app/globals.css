@@ -25,4 +25,7 @@ body {
   color: var(--foreground);
   font-family: "Poppins", Arial, Helvetica, sans-serif;
   background-color: var(--background) !important;
+  height: 100%;
+  overflow-x: hidden;
+  position: relative;
 }

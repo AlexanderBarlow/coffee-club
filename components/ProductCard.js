@@ -9,12 +9,10 @@ import {
 } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
 
-export default function ProductCard({ drink }) {
-  const router = useRouter();
+export default function ProductCard({ drink, onCustomize }) {
   const isMobile = useMediaQuery("(max-width:600px)");
 
   const handleCustomizeClick = async () => {
@@ -23,9 +21,10 @@ export default function ProductCard({ drink }) {
     } = await supabase.auth.getSession();
 
     if (!session) {
-      router.push("/login");
+      window.location.href = "/login";
     } else {
-      router.push(`/customize/${drink.id}`);
+      console.log(drink)
+      onCustomize?.(drink);
     }
   };
 
@@ -45,21 +44,13 @@ export default function ProductCard({ drink }) {
           boxShadow: isMobile
             ? "0 1px 3px rgba(0,0,0,0.04)"
             : "0 2px 6px rgba(0,0,0,0.08)",
-          height: {
-            xs: 150,
-            sm: 170,
-            md: 190,
-            lg: 200,
-          },
+          height: { xs: 150, sm: 170, md: 190, lg: 200 },
           transition: "box-shadow 0.3s ease",
           "&:hover": !isMobile
-            ? {
-                boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
-              }
+            ? { boxShadow: "0 8px 20px rgba(0,0,0,0.12)" }
             : {},
         }}
       >
-        {/* Image */}
         <Box
           sx={{
             flexShrink: 0,
@@ -84,12 +75,11 @@ export default function ProductCard({ drink }) {
               objectFit: "contain",
               width: "100%",
               height: "100%",
-              borderRadius: "12px", // Apply explicit rounding
+              borderRadius: "12px",
             }}
           />
         </Box>
 
-        {/* Text Content */}
         <Box
           sx={{
             flexGrow: 1,
