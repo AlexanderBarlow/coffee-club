@@ -7,8 +7,7 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
-    "postinstall": "npx lightningcss --version || true"
+    "test": "jest"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
