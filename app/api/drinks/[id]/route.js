@@ -3,11 +3,16 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export async function GET(req, context) {
-  const params = await context.params; // ✅ Await it!
+  const params = await context.params;
 
   try {
     const drink = await prisma.drink.findUnique({
       where: { id: params.id },
+      include: {
+        syrups: true,
+        sauces: true,
+        milks: true,
+      },
     });
 
     if (!drink) {

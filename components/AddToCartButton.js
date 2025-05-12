@@ -1,11 +1,9 @@
 "use client";
 
 import { Button } from "@mui/material";
-import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 
-export default function AddToCartButton({ drink, customization }) {
-  const router = useRouter();
+export default function AddToCartButton({ drink, customization, onClose }) {
   const { addToCart } = useCart();
 
   const handleClick = async () => {
@@ -22,8 +20,8 @@ export default function AddToCartButton({ drink, customization }) {
       customization,
     };
 
-    await addToCart(cartItem); // ✅ wait for cart update
-    router.push("/cart"); // ✅ now safe to redirect
+    await addToCart(cartItem); // ✅ Add to cart
+    onClose?.(); // ✅ Close modal instead of redirecting
   };
 
   return (
