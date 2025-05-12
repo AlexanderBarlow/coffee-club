@@ -1,5 +1,5 @@
 import "./globals.css";
-import { Poppins } from "next/font/google";
+// import { Poppins } from "next/font/google";
 import ThemeRegistry from "@/components/ThemeRegistry";
 import { CartProvider } from "@/context/CartContext";
 import { OrderStatusProvider } from "@/context/OrderStatusContext";
