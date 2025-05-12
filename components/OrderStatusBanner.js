@@ -1,17 +1,18 @@
 "use client";
 
 import { useOrderStatus } from "@/context/OrderStatusContext";
-import { Box, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Typography, useMediaQuery, useTheme, IconButton } from "@mui/material";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence, usePresence } from "framer-motion";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import CoffeeMakerIcon from "@mui/icons-material/CoffeeMaker";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CloseIcon from "@mui/icons-material/Close";
 
 const steps = [
     { key: "PENDING", label: "Order Placed", icon: <HourglassTopIcon fontSize="small" /> },
-    { key: "IN_PROGRESS", label: "Barista Crafting", icon: <CoffeeMakerIcon fontSize="small" /> },
-    { key: "COMPLETED", label: "Order Completed", icon: <CheckCircleIcon fontSize="small" /> },
+    { key: "IN_PROGRESS", label: "Crafting", icon: <CoffeeMakerIcon fontSize="small" /> },
+    { key: "COMPLETED", label: "Completed", icon: <CheckCircleIcon fontSize="small" /> },
 ];
 
 function AnimatedBanner({ status, orderId, onDone }) {
@@ -19,10 +20,11 @@ function AnimatedBanner({ status, orderId, onDone }) {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
     const [showCircle, setShowCircle] = useState(false);
+    const [dismissed, setDismissed] = useState(false);
 
     useEffect(() => {
         if (status === "COMPLETED") {
-            const t1 = setTimeout(() => setShowCircle(true), 500);
+            const t1 = setTimeout(() => setShowCircle(true), 300);
             const t2 = setTimeout(async () => {
                 await fetch(`/api/orders/${orderId}/mark-stored`, { method: "POST" });
                 if (safeToRemove) safeToRemove();
@@ -36,20 +38,20 @@ function AnimatedBanner({ status, orderId, onDone }) {
         }
     }, [status, orderId, safeToRemove, onDone]);
 
+    if (dismissed) return null;
     const stepIndex = steps.findIndex((s) => s.key === status);
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: -15 }}
+            initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.4 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3 }}
             style={{
                 position: "fixed",
-                top: 14,
+                top: 12,
                 left: 0,
                 right: 0,
-                margin: "0 auto",
                 zIndex: 9999,
                 display: "flex",
                 justifyContent: "center",
@@ -58,89 +60,102 @@ function AnimatedBanner({ status, orderId, onDone }) {
         >
             <Box
                 sx={{
-                    width: showCircle ? 48 : "95vw",
-                    maxWidth: showCircle ? undefined : 700,
-                    height: showCircle ? 48 : "auto",
-                    borderRadius: showCircle ? "50%" : "999px",
-                    backgroundColor: showCircle ? "#4caf50" : "rgba(255,255,255,0.2)",
-                    backdropFilter: showCircle ? undefined : "blur(12px)",
-                    border: showCircle ? undefined : "1px solid rgba(255,255,255,0.3)",
+                    width: showCircle ? 42 : "auto",
+                    maxWidth: "95vw",
+                    px: showCircle ? 0 : 2,
+                    py: showCircle ? 0 : 1,
+                    height: showCircle ? 42 : "auto",
+                    borderRadius: showCircle ? "50%" : 2,
+                    backgroundColor: showCircle ? "#4caf50" : "rgba(33,33,33,0.9)",
+                    backdropFilter: showCircle ? undefined : "blur(10px)",
                     boxShadow: 4,
                     color: "#fff",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    gap: showCircle ? 0 : isMobile ? 2 : 3,
-                    px: showCircle ? 0 : isMobile ? 2 : 3,
-                    py: showCircle ? 0 : isMobile ? 0.6 : 0.8,
+                    justifyContent: "space-between",
+                    gap: 1,
                     pointerEvents: "auto",
                 }}
             >
                 {showCircle ? (
                     <motion.div
-                        key="circle"
-                        initial={{ scale: 0.5, opacity: 0 }}
+                        initial={{ scale: 0.6, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.5, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
+                        exit={{ scale: 0.6, opacity: 0 }}
+                        transition={{ duration: 0.4 }}
                     >
                         <CheckCircleIcon fontSize="medium" />
                     </motion.div>
                 ) : (
-                    <motion.div
-                        key="steps"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        style={{ display: "flex", alignItems: "center" }}
-                    >
-                        {steps.map((step, i) => {
-                            const isActive = i <= stepIndex;
-                            const isCurrent = i === stepIndex;
+                    <>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: isMobile ? 1.5 : 3,
+                            }}
+                        >
+                            {steps.map((step, i) => {
+                                const isActive = i <= stepIndex;
+                                const isCurrent = i === stepIndex;
 
-                            return (
-                                <Box
-                                    key={step.key}
-                                    component={motion.div}
-                                    initial={{ scale: 0.95, opacity: 0.5 }}
-                                    animate={{ scale: isCurrent ? 1.05 : 1, opacity: isActive ? 1 : 0.4 }}
-                                    transition={{ duration: 0.3 }}
-                                    sx={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "center",
-                                        minWidth: 70,
-                                        mx: 1,
-                                    }}
-                                >
+                                return (
                                     <Box
+                                        key={step.key}
+                                        component={motion.div}
+                                        initial={{ scale: 0.95, opacity: 0.5 }}
+                                        animate={{
+                                            scale: isCurrent ? 1.1 : 1,
+                                            opacity: isActive ? 1 : 0.4,
+                                        }}
+                                        transition={{ duration: 0.3 }}
                                         sx={{
-                                            backgroundColor: isActive ? "#2196f3" : "#cfd8dc",
-                                            color: "#fff",
-                                            borderRadius: "50%",
-                                            p: 0.5,
                                             display: "flex",
+                                            flexDirection: "column",
                                             alignItems: "center",
-                                            justifyContent: "center",
-                                            mb: 0.4,
+                                            minWidth: 50,
                                         }}
                                     >
-                                        {step.icon}
+                                        <Box
+                                            sx={{
+                                                backgroundColor: isActive ? "#90caf9" : "#616161",
+                                                color: "#fff",
+                                                borderRadius: "50%",
+                                                width: 24,
+                                                height: 24,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                mb: 0.5,
+                                            }}
+                                        >
+                                            {step.icon}
+                                        </Box>
+                                        <Typography
+                                            variant="caption"
+                                            fontSize="0.65rem"
+                                            fontWeight={isCurrent ? 600 : 400}
+                                            sx={{ color: "#e0e0e0", lineHeight: 1 }}
+                                        >
+                                            {step.label}
+                                        </Typography>
                                     </Box>
-                                    <Typography
-                                        variant="caption"
-                                        fontSize={isMobile ? "0.6rem" : "0.7rem"}
-                                        fontWeight={isCurrent ? 700 : 500}
-                                        color="text.primary"
-                                        sx={{ textAlign: "center" }}
-                                    >
-                                        {step.label}
-                                    </Typography>
-                                </Box>
-                            );
-                        })}
-                    </motion.div>
+                                );
+                            })}
+                        </Box>
+
+                        <IconButton
+                            onClick={() => setDismissed(true)}
+                            size="small"
+                            sx={{
+                                color: "#ccc",
+                                "&:hover": { color: "#fff" },
+                                ml: 1,
+                            }}
+                        >
+                            <CloseIcon fontSize="small" />
+                        </IconButton>
+                    </>
                 )}
             </Box>
         </motion.div>
@@ -154,7 +169,7 @@ export default function OrderStatusBanner() {
 
     useEffect(() => {
         if (!status || !orderId) {
-            setVisibleBanner(null); // ✅ immediately hide banner on logout/reset
+            setVisibleBanner(null);
             return;
         }
 
@@ -165,11 +180,6 @@ export default function OrderStatusBanner() {
         }
     }, [status, orderId]);
 
-
-    const handleDone = () => {
-        setVisibleBanner(null);
-    };
-
     return (
         <AnimatePresence>
             {visibleBanner && (
@@ -177,7 +187,7 @@ export default function OrderStatusBanner() {
                     key={`${visibleBanner.status}-${visibleBanner.orderId}`}
                     status={visibleBanner.status}
                     orderId={visibleBanner.orderId}
-                    onDone={handleDone}
+                    onDone={() => setVisibleBanner(null)}
                 />
             )}
         </AnimatePresence>
