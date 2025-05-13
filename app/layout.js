@@ -4,6 +4,7 @@ import ThemeRegistry from "@/components/ThemeRegistry";
 import { CartProvider } from "@/context/CartContext";
 import { OrderStatusProvider } from "@/context/OrderStatusContext";
 import OrderStatusBanner from "@/components/OrderStatusBanner";
+import CartFab from "@/components/CartFab";
 
 const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600", "700"] });
 
@@ -38,6 +39,7 @@ export default function RootLayout({ children }) {
             <ThemeRegistry>
               {children}
               <OrderStatusBanner />
+              <CartFab />
             </ThemeRegistry>
           </OrderStatusProvider>
         </CartProvider>
