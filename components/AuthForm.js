@@ -59,9 +59,17 @@ export default function AuthForm({ type }) {
 
       const userId = authData.user?.id;
       const res = await fetch(`/api/user/${userId}`);
-      const user = await res.json();
 
-      router.push(user?.isAdmin ? "/admin-verify" : "/dashboard");
+      const user = await res.json();
+      const role = user?.role?.name;
+
+      if (role !== "USER") {
+        // Any staff role
+        router.push("/admin-verify");
+      } else {
+        router.push("/dashboard");
+      }
+      
     } catch (err) {
       console.error("Unexpected error:", err);
       setError("Something went wrong. Please try again.");

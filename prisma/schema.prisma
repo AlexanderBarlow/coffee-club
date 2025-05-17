@@ -13,14 +13,17 @@ model User {
   tier      Tier     @default(BRONZE)
   points    Int      @default(0)
 
-  // New role relationship
   roleId    String?
   role      Role?    @relation(fields: [roleId], references: [id])
+
+  employeeNumber String?
+  storeNumber    String?
 
   orders    Order[]
   reviews   Review[]
   createdAt DateTime @default(now())
 }
+
 
 model Role {
   id        String     @id @default(uuid())

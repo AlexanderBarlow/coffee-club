@@ -5,31 +5,35 @@ import { useRouter } from "next/navigation";
 import { TextField, Button, Typography, Box, Paper } from "@mui/material";
 
 export default function AdminVerifyForm() {
-  const [employeeId, setEmployeeId] = useState("");
+  const [employeeNumber, setEmployeeNumber] = useState("");
   const [storeNumber, setStoreNumber] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
 
+  // Validate against the user’s stored employeeNumber/storeNumber
   const handleVerify = async (e) => {
     e.preventDefault();
     setError("");
 
-    try {
-      const res = await fetch("/api/admin/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ employeeId, storeNumber }),
-      });
+    const res = await fetch("/api/staff/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ employeeNumber, storeNumber }),
+    });
 
-      const result = await res.json();
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "Verification failed.");
+      return;
+    }
 
-      if (!res.ok) return setError(result.error || "Verification failed");
-
-      router.push("/admin"); // verified!
-    } catch (err) {
-      setError("Unexpected error. Please try again.");
+    if (data.role === "ADMIN") {
+      router.push("/admin");
+    } else {
+      router.push(`/dashboard/${data.role.toLowerCase()}`);
     }
   };
+  
 
   return (
     <Box
@@ -50,8 +54,8 @@ export default function AdminVerifyForm() {
             label="Employee ID"
             fullWidth
             required
-            value={employeeId}
-            onChange={(e) => setEmployeeId(e.target.value)}
+            value={employeeNumber}
+            onChange={(e) => setEmployeeNumber(e.target.value)}
             margin="normal"
           />
           <TextField

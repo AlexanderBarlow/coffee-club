@@ -10,6 +10,7 @@ export async function GET(req) {
   try {
     const user = await prisma.user.findUnique({
       where: { id },
+      include: { role: true },
     });
 
     if (!user) {
@@ -18,7 +19,16 @@ export async function GET(req) {
       });
     }
 
-    return new Response(JSON.stringify(user), { status: 200 });
+    return new Response(
+      JSON.stringify({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        tier: user.tier,
+        points: user.points,
+      }),
+      { status: 200 }
+    );
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,

@@ -10,7 +10,7 @@ function getRandomItems(array, maxItems) {
 	return shuffled.slice(0, count);
 }
 
-async function main() {
+export default async function main() {
 	const syrups = [
 		{ name: "Vanilla", brand: "Monin", description: "Classic vanilla flavor." },
 		{ name: "Caramel", brand: "Torani", description: "Rich buttery caramel." },
