@@ -13,14 +13,30 @@ import { useTheme } from "@mui/material/styles";
 import { useCart } from "@/context/CartContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+
 
 export default function CartFab() {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
     const { cart } = useCart();
     const [open, setOpen] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    if (!isMobile || cart.length === 0) return null; // ✅ Hide if not mobile or cart is empty
+    useEffect(() => {
+      const checkUser = async () => {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        setIsLoggedIn(!!session?.user);
+      };
+      checkUser();
+    }, []);
+
+
+    if (!isMobile || cart.length === 0 || !isLoggedIn) return null;
+
 
     return (
         <Box
