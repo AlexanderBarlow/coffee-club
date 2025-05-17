@@ -33,6 +33,7 @@ export default function CategoryPage({
   const [drinks, setDrinks] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Fallback to internal state if props are not passed
   const [internalModalOpen, setInternalModalOpen] = useState(false);
   const [internalDrinkId, setInternalDrinkId] = useState(null);
 
@@ -52,7 +53,13 @@ export default function CategoryPage({
     fetchDrinks();
   }, [currentCategory]);
 
+  useEffect(() => {
+    console.log("Modal Open State:", modalOpen);
+    console.log("Drink ID:", selectedDrinkId);
+  }, [modalOpen, selectedDrinkId]);
+
   const handleCustomize = (drink) => {
+    console.log("Customize clicked for", drink);
     setSelectedDrinkId(drink.id);
     setModalOpen(true);
   };

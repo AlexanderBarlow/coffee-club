@@ -12,24 +12,36 @@ model User {
   email     String   @unique
   tier      Tier     @default(BRONZE)
   points    Int      @default(0)
-  isAdmin   Boolean  @default(false)
+
+  // New role relationship
+  roleId    String?
+  role      Role?    @relation(fields: [roleId], references: [id])
+
   orders    Order[]
   reviews   Review[]
   createdAt DateTime @default(now())
 }
 
+model Role {
+  id        String     @id @default(uuid())
+  name      RoleName   @unique
+  users     User[]
+  createdAt DateTime   @default(now())
+}
+
 model Order {
-  id             String        @id @default(uuid())
-  user           User          @relation(fields: [userId], references: [id])
-  userId         String
+  id              String        @id @default(uuid())
+  user            User          @relation(fields: [userId], references: [id])
+  userId          String
   stripeSessionId String
-  items          Json
-  total          Float
-  status         OrderStatus   @default(PENDING)
-  paymentStatus  PaymentStatus @default(UNPAID)
-  review         Review?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  items           Json
+  total           Float
+  status          OrderStatus   @default(PENDING)
+  paymentStatus   PaymentStatus @default(UNPAID)
+  review          Review?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  stored          Boolean       @default(false)
 }
 
 model Review {
@@ -53,23 +65,22 @@ model TempCheckout {
 model Category {
   id          String   @id @default(uuid())
   name        String   @unique
-  emoji       String?  // 👈 ADD THIS LINE
+  emoji       String?
   description String?
   createdAt   DateTime @default(now())
   drinks      Drink[]
 }
 
-
 model Drink {
-  id              String   @id @default(uuid())
-  name            String   @unique
-  description     String
-  price           Float
-  imageUrl        String?
-  available       Boolean  @default(true)
-  featured        Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  customizeOptions Json?   // controls allowed customization per drink
+  id               String   @id @default(uuid())
+  name             String   @unique
+  description      String
+  price            Float
+  imageUrl         String?
+  available        Boolean  @default(true)
+  featured         Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  customizeOptions Json?
 
   // Relations
   categoryId String
@@ -130,4 +141,12 @@ enum PaymentStatus {
   UNPAID
   PAID
   REFUNDED
+}
+
+enum RoleName {
+  USER
+  ADMIN
+  BARISTA
+  MANAGER
+  SUPERVISOR
 }

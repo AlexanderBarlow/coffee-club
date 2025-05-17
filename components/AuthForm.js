@@ -61,7 +61,7 @@ export default function AuthForm({ type }) {
       const res = await fetch(`/api/user/${userId}`);
       const user = await res.json();
 
-      router.push(user?.isAdmin ? "/admin" : "/dashboard");
+      router.push(user?.isAdmin ? "/admin-verify" : "/dashboard");
     } catch (err) {
       console.error("Unexpected error:", err);
       setError("Something went wrong. Please try again.");

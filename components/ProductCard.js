@@ -23,9 +23,8 @@ export default function ProductCard({ drink, onCustomize }) {
     if (!session) {
       window.location.href = "/login";
     } else {
+      console.log(drink)
       onCustomize?.(drink);
-      console.log(drink);
-      
     }
   };
 
@@ -46,6 +45,10 @@ export default function ProductCard({ drink, onCustomize }) {
             ? "0 1px 3px rgba(0,0,0,0.04)"
             : "0 2px 6px rgba(0,0,0,0.08)",
           height: { xs: 150, sm: 170, md: 190, lg: 200 },
+          transition: "box-shadow 0.3s ease",
+          "&:hover": !isMobile
+            ? { boxShadow: "0 8px 20px rgba(0,0,0,0.12)" }
+            : {},
         }}
       >
         <Box
