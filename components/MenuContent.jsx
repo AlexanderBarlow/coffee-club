@@ -10,25 +10,18 @@ import {
   Grid,
   Skeleton,
 } from "@mui/material";
+import { motion, AnimatePresence } from "framer-motion";
 import BottomTabBar from "@/components/MobileNavbar";
 import ProductCard from "@/components/ProductCard";
 import CustomizeModal from "@/components/CustomizeModal";
 
-const categories = [
-  { key: "iced", label: "🧊 Iced" },
-  { key: "hot", label: "🔥 Hot" },
-  { key: "espresso", label: "☕ Espresso" },
-  { key: "frappes", label: "🍧 Frappes" },
-  { key: "tea", label: "🍵 Tea" },
-  { key: "grub", label: "🍽️ Grub" },
-];
-
 export default function MenuContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const categoryFromUrl = searchParams.get("category") || "iced";
+  const categoryFromUrl = searchParams.get("category");
 
-  const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [drinks, setDrinks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -46,7 +39,37 @@ export default function MenuContent() {
     setModalOpen(true);
   };
 
+  // Fetch categories from the DB
   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch("/api/categories");
+        const data = await res.json();
+
+        const formatted = data
+          .map((cat) => ({
+            key: cat.name.toLowerCase(),
+            label: `${cat.emoji ?? ""} ${cat.name}`,
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label));
+
+        setCategories(formatted);
+
+        const defaultKey = categoryFromUrl || "iced";
+        const exists = formatted.find((cat) => cat.key === defaultKey);
+        setSelectedCategory(exists ? defaultKey : formatted[0]?.key);
+      } catch (err) {
+        console.error("Failed to fetch categories:", err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // Fetch drinks for the selected category
+  useEffect(() => {
+    if (!selectedCategory) return;
+
     const fetchDrinks = async () => {
       setLoading(true);
       try {
@@ -59,8 +82,20 @@ export default function MenuContent() {
         setLoading(false);
       }
     };
+
     fetchDrinks();
   }, [selectedCategory]);
+
+  if (!categories.length || !selectedCategory) {
+    return (
+      <Box sx={{ minHeight: "100vh", backgroundColor: "#fef8f2" }}>
+        <BottomTabBar />
+        <Container sx={{ pt: 10, textAlign: "center" }}>
+          <Typography variant="h6">Loading categories...</Typography>
+        </Container>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ backgroundColor: "#fef8f2", minHeight: "100vh", pb: 10 }}>
@@ -150,23 +185,36 @@ export default function MenuContent() {
           {categories.find((c) => c.key === selectedCategory)?.label}
         </Typography>
 
-        <Grid container spacing={3}>
-          {loading
-            ? [...Array(6)].map((_, idx) => (
-                <Grid item xs={12} sm={6} key={idx}>
-                  <Skeleton
-                    variant="rectangular"
-                    height={180}
-                    sx={{ borderRadius: 3 }}
-                  />
-                </Grid>
-              ))
-            : drinks.map((drink) => (
-                <Grid item xs={12} sm={6} key={drink.id}>
-                  <ProductCard drink={drink} onCustomize={handleCustomize} />
-                </Grid>
-              ))}
-        </Grid>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={selectedCategory}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Grid container spacing={3}>
+              {loading
+                ? [...Array(6)].map((_, idx) => (
+                    <Grid item xs={12} sm={6} key={idx}>
+                      <Skeleton
+                        variant="rectangular"
+                        height={180}
+                        sx={{ borderRadius: 3 }}
+                      />
+                    </Grid>
+                  ))
+                : drinks.map((drink) => (
+                    <Grid item xs={12} sm={6} key={drink.id}>
+                      <ProductCard
+                        drink={drink}
+                        onCustomize={handleCustomize}
+                      />
+                    </Grid>
+                  ))}
+            </Grid>
+          </motion.div>
+        </AnimatePresence>
       </Container>
 
       {/* Customize Modal */}

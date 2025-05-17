@@ -42,6 +42,11 @@ const menuItems = [
     icon: <CategoryIcon />,
     route: "/admin/menu/add-category",
   },
+  {
+    label: "Tickets",
+    icon: <CategoryIcon />,
+    route: "/admin/orders/ticket",
+  },
 ];
 
 export default function AdminLayout({ children }) {

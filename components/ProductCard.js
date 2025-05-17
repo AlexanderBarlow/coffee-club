@@ -11,9 +11,11 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
+import { useState } from "react";
 
 export default function ProductCard({ drink, onCustomize }) {
   const isMobile = useMediaQuery("(max-width:600px)");
+  const [imageError, setImageError] = useState(false);
 
   const handleCustomizeClick = async () => {
     const {
@@ -23,10 +25,12 @@ export default function ProductCard({ drink, onCustomize }) {
     if (!session) {
       window.location.href = "/login";
     } else {
-      console.log(drink)
       onCustomize?.(drink);
     }
   };
+
+  const imageSrc =
+    !imageError && drink.imageUrl ? drink.imageUrl : "/images/fallback.jpg";
 
   return (
     <motion.div
@@ -66,11 +70,12 @@ export default function ProductCard({ drink, onCustomize }) {
           }}
         >
           <Image
-            src={drink.imageUrl || "/images/fallback.jpg"}
+            src={imageSrc}
             alt={drink.name}
             width={120}
             height={120}
             loading="lazy"
+            onError={() => setImageError(true)}
             style={{
               objectFit: "contain",
               width: "100%",

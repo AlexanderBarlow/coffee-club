@@ -6,7 +6,7 @@ export default async function main() {
   console.log("🌱 Seeding roles...");
 
   // Create roles if they don't exist
-  const roleNames = ["ADMIN", "BARISTA", "MANAGER", "SUPERVISOR"];
+  const roleNames = ["ADMIN", "BARISTA", "MANAGER", "SUPERVISOR", "USER"];
   const roles = {};
 
   for (const name of roleNames) {

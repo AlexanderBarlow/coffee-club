@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 import {
   TextField,
   Button,
@@ -11,6 +11,7 @@ import {
   Paper,
   Divider,
   InputAdornment,
+  CircularProgress,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import CoffeeIcon from "@mui/icons-material/LocalCafe";
@@ -19,7 +20,39 @@ export default function AuthForm({ type }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [checkingSession, setCheckingSession] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        setCheckingSession(false);
+        return;
+      }
+
+      const res = await fetch(`/api/user/${session.user.id}`);
+      if (!res.ok) {
+        await supabase.auth.signOut();
+        setCheckingSession(false);
+        return;
+      }
+
+      const dbUser = await res.json();
+      const role = dbUser?.role?.name;
+
+      if (["ADMIN", "MANAGER", "SUPERVISOR"].includes(role)) {
+        router.push("/admin-verify");
+      } else {
+        router.push("/dashboard");
+      }
+    };
+
+    checkSession();
+  }, []);
 
   const createUserIfNotExists = async (id, email) => {
     try {
@@ -58,23 +91,56 @@ export default function AuthForm({ type }) {
       if (error) return setError(error.message);
 
       const userId = authData.user?.id;
+
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
       const res = await fetch(`/api/user/${userId}`);
+      if (!res.ok) {
+        await supabase.auth.signOut();
+        setError("User record not found in database.");
+        return;
+      }
 
-      const user = await res.json();
-      const role = user?.role?.name;
+      const dbUser = await res.json();
+      const role = dbUser?.role?.name;
 
-      if (role !== "USER") {
-        // Any staff role
+      if (!role) {
+        await supabase.auth.signOut();
+        setError("No role found for this user.");
+        return;
+      }
+
+      if (["ADMIN", "MANAGER", "SUPERVISOR"].includes(role)) {
         router.push("/admin-verify");
       } else {
         router.push("/dashboard");
       }
-      
     } catch (err) {
       console.error("Unexpected error:", err);
       setError("Something went wrong. Please try again.");
     }
   };
+
+  if (checkingSession) {
+    return (
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "linear-gradient(145deg, #fff9f4, #ffeede)",
+        }}
+      >
+        <Box textAlign="center">
+          <CircularProgress sx={{ color: "#6f4e37", mb: 2 }} />
+          <Typography variant="h6" color="#6f4e37">
+            Checking your session...
+          </Typography>
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box
