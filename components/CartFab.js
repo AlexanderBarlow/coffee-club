@@ -33,6 +33,9 @@ export default function CartFab() {
       checkUser();
     }, []);
 
+    console.log(isLoggedIn);
+    
+
 
     if (!isMobile || cart.length === 0 || !isLoggedIn) return null;
 

@@ -89,10 +89,24 @@ export default function ResponsiveNavbar({ visible = true }) {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setDrawerOpen(false);
-    router.push("/login");
+    try {
+      const { error } = await supabase.auth.signOut();
+
+      if (error && error.message !== "Auth session missing!") {
+        console.error("Logout failed:", error.message);
+      }
+
+      setIsAuthenticated(false);
+      localStorage.removeItem("cart");
+      setDrawerOpen(false);
+      router.refresh();
+      router.push("/login");
+    } catch (err) {
+      console.error("Unexpected logout error:", err);
+    }
   };
+  
+  
 
   const navTo = (path) => {
     setDrawerOpen(false);
