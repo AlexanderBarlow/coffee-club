@@ -12,7 +12,6 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { useTheme } from "@mui/material/styles";
 import { useCart } from "@/context/CartContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
