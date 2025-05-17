@@ -10,22 +10,36 @@ import {
 } from "@mui/material";
 import ProductCard from "@/components/ProductCard";
 import BottomTabBar from "@/components/MobileNavbar";
-import { useRouter } from "next/navigation";
-import Button from "@/components/Button";
+import CustomizeModal from "./CustomizeModal";
 
 const categories = [
-  { key: "iced", label: "🧊 Iced", emoji: "🧊" },
-  { key: "hot", label: "🔥 Hot", emoji: "🔥" },
-  { key: "espresso", label: "☕ Espresso", emoji: "☕" },
-  { key: "tea", label: "🍵 Tea", emoji: "🍵" },
-  { key: "grub", label: "🍨 Grub", emoji: "🍨" },
+  { key: "iced", label: "🧊 Iced" },
+  { key: "hot", label: "🔥 Hot" },
+  { key: "espresso", label: "☕ Espresso" },
+  { key: "tea", label: "🍵 Tea" },
+  { key: "grub", label: "🍨 Grub" },
 ];
 
-export default function CategoryPage({ initialCategory = "iced" }) {
+export default function CategoryPage({
+  initialCategory = "iced",
+  emoji,
+  label,
+  modalOpen: externalModalOpen,
+  setModalOpen: setExternalModalOpen,
+  selectedDrinkId: externalDrinkId,
+  setSelectedDrinkId: setExternalDrinkId,
+}) {
   const [currentCategory, setCurrentCategory] = useState(initialCategory);
   const [drinks, setDrinks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+
+  const [internalModalOpen, setInternalModalOpen] = useState(false);
+  const [internalDrinkId, setInternalDrinkId] = useState(null);
+
+  const modalOpen = externalModalOpen ?? internalModalOpen;
+  const setModalOpen = setExternalModalOpen ?? setInternalModalOpen;
+  const selectedDrinkId = externalDrinkId ?? internalDrinkId;
+  const setSelectedDrinkId = setExternalDrinkId ?? setInternalDrinkId;
 
   useEffect(() => {
     const fetchDrinks = async () => {
@@ -39,16 +53,15 @@ export default function CategoryPage({ initialCategory = "iced" }) {
   }, [currentCategory]);
 
   const handleCustomize = (drink) => {
-    router.push(`/customize/${drink.id}`);
+    setSelectedDrinkId(drink.id);
+    setModalOpen(true);
   };
 
   return (
     <Box sx={{ backgroundColor: "#fef8f2", minHeight: "100vh" }}>
       <BottomTabBar />
 
-
       <Container maxWidth="md" sx={{ pt: 2, pb: { xs: 12, sm: 14 } }}>
-        {/* Categories Selector */}
         <Box
           sx={{
             display: "flex",
@@ -77,13 +90,11 @@ export default function CategoryPage({ initialCategory = "iced" }) {
               }}
               onClick={() => setCurrentCategory(cat.key)}
             >
-              {" "}
               {cat.label}
             </MuiButton>
           ))}
         </Box>
 
-        {/* Current Category Title */}
         <Typography
           variant="h4"
           fontWeight={700}
@@ -96,7 +107,6 @@ export default function CategoryPage({ initialCategory = "iced" }) {
           {categories.find((c) => c.key === currentCategory)?.label}
         </Typography>
 
-        {/* Drink Grid */}
         <Box
           sx={{
             display: "grid",
@@ -111,11 +121,7 @@ export default function CategoryPage({ initialCategory = "iced" }) {
                   variant="rectangular"
                   animation="wave"
                   height={160}
-                  sx={{
-                    borderRadius: 3,
-                    width: "100%",
-                    minHeight: 160,
-                  }}
+                  sx={{ borderRadius: 3 }}
                 />
               ))
             : drinks.map((drink) => (
@@ -127,6 +133,12 @@ export default function CategoryPage({ initialCategory = "iced" }) {
               ))}
         </Box>
       </Container>
+
+      <CustomizeModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        drinkId={selectedDrinkId}
+      />
     </Box>
   );
 }
