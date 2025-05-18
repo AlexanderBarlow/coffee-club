@@ -86,8 +86,21 @@ export default function AdminHomePage() {
     ? `${(totalEmployees / stats.employeeCounts.USER).toFixed(2)}:1`
     : "-";
 
+  const fadeCard = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.5 },
+  };
+
   return (
-    <Box sx={{ overflowX: "hidden", p: { xs: 2, md: 4 } }}>
+    <Box
+      sx={{
+        overflowX: "hidden",
+        p: { xs: 2, md: 4 },
+        maxWidth: 1400,
+        mx: "auto",
+      }}
+    >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -159,63 +172,118 @@ export default function AdminHomePage() {
             <CircularProgress />
           </Box>
         ) : (
-          <Grid container spacing={4}>
-            {/* Stat Cards */}
-            <Grid item xs={12} sm={6} md={4}>
-              <Paper elevation={3} sx={{ p: 3, textAlign: "center" }}>
-                <Typography variant="h6" color="#6f4e37" fontWeight={700}>
-                  Total Orders
-                </Typography>
-                <Typography
-                  variant="h4"
-                  fontWeight={900}
-                  color="primary"
-                  mt={1}
-                >
-                  {stats.totalOrders}
-                </Typography>
-              </Paper>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={4}>
-              <Paper elevation={3} sx={{ p: 3, textAlign: "center" }}>
-                <Typography variant="h6" color="#6f4e37" fontWeight={700}>
-                  Revenue
-                </Typography>
-                <Typography
-                  variant="h4"
-                  fontWeight={900}
-                  color="primary"
-                  mt={1}
-                >
-                  ${stats.totalRevenue.toFixed(2)}
-                </Typography>
-              </Paper>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={4}>
-              <Paper elevation={3} sx={{ p: 3, textAlign: "center" }}>
-                <Typography variant="h6" color="#6f4e37" fontWeight={700}>
-                  Team Overview
-                </Typography>
-                <Stack spacing={1} mt={2} alignItems="center">
-                  {Object.entries(stats.employeeCounts)
-                    .filter(([role]) => role !== "USER")
-                    .map(([role, count]) => (
-                      <Typography key={role} variant="body1">
-                        <strong>{role}:</strong> {count}
+          <Stack spacing={4}>
+            {/* Grid of Key Stats */}
+            <Grid container spacing={3}>
+              {[
+                {
+                  label: "Total Orders",
+                  value: stats.totalOrders,
+                },
+                {
+                  label: "Revenue",
+                  value: `$${stats.totalRevenue.toFixed(2)}`,
+                },
+                {
+                  label: "Avg Ticket Value",
+                  value: `$${stats.avgTicket.toFixed(2)}`,
+                },
+                {
+                  label: "Avg Ticket Time",
+                  value: `${stats.avgTicketTimeMinutes} mins`,
+                },
+                {
+                  label: "Satisfaction",
+                  value: stats.avgRating
+                    ? `${stats.avgRating.toFixed(1)} ★`
+                    : "N/A",
+                },
+                {
+                  label: "Repeat Customers",
+                  value: `${stats.repeatCustomers} (${stats.repeatRate}%)`,
+                },
+                {
+                  label: "Unique Customers",
+                  value: stats.uniqueCustomers,
+                },
+              ].map((stat, index) => (
+                <Grid item xs={12} sm={6} md={4} key={index}>
+                  <motion.div {...fadeCard}>
+                    <Paper elevation={3} sx={{ p: 3, textAlign: "center" }}>
+                      <Typography variant="h6" color="#6f4e37" fontWeight={700}>
+                        {stat.label}
                       </Typography>
-                    ))}
-                </Stack>
-                <Divider sx={{ my: 1.5 }} />
-                <Typography variant="body2" color="text.secondary">
-                  Staff-to-User Ratio: <strong>{staffToUserRatio}</strong>
-                </Typography>
-              </Paper>
+                      <Typography
+                        variant="h4"
+                        fontWeight={900}
+                        color="primary"
+                        mt={1}
+                      >
+                        {stat.value}
+                      </Typography>
+                    </Paper>
+                  </motion.div>
+                </Grid>
+              ))}
+            </Grid>
+
+            {/* Two Column Grid: Team + Top Items */}
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <motion.div {...fadeCard}>
+                  <Paper elevation={3} sx={{ p: 3, textAlign: "center" }}>
+                    <Typography variant="h6" color="#6f4e37" fontWeight={700}>
+                      Team Overview
+                    </Typography>
+                    <Stack spacing={1} mt={2} alignItems="center">
+                      {Object.entries(stats.employeeCounts)
+                        .filter(([role]) => role !== "USER")
+                        .map(([role, count]) => (
+                          <Typography key={role} variant="body1">
+                            <strong>{role}:</strong> {count}
+                          </Typography>
+                        ))}
+                    </Stack>
+                    <Divider sx={{ my: 1.5 }} />
+                    <Typography variant="body2" color="text.secondary">
+                      Staff-to-User Ratio: <strong>{staffToUserRatio}</strong>
+                    </Typography>
+                  </Paper>
+                </motion.div>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <motion.div {...fadeCard}>
+                  <Paper elevation={3} sx={{ p: 3, textAlign: "center" }}>
+                    <Typography
+                      variant="h6"
+                      fontWeight={700}
+                      color="#6f4e37"
+                      mb={2}
+                    >
+                      Top Ordered Items
+                    </Typography>
+                    <Stack spacing={1}>
+                      {stats.topItems.map((item, i) => (
+                        <Box
+                          key={i}
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <Typography>{item.name}</Typography>
+                          <Typography fontWeight={600}>{item.count}</Typography>
+                        </Box>
+                      ))}
+                    </Stack>
+                  </Paper>
+                </motion.div>
+              </Grid>
             </Grid>
 
             {/* Sales Chart */}
-            <Grid item xs={12}>
+            <motion.div {...fadeCard}>
               <Paper elevation={3} sx={{ p: 3, borderRadius: 4 }}>
                 <Typography
                   variant="h6"
@@ -236,8 +304,8 @@ export default function AdminHomePage() {
                   <Line data={salesData} options={salesOptions} />
                 </Box>
               </Paper>
-            </Grid>
-          </Grid>
+            </motion.div>
+          </Stack>
         )}
       </motion.div>
     </Box>

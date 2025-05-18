@@ -33,7 +33,7 @@ const menuItems = [
   { label: "Orders", icon: <ReceiptIcon />, route: "/admin/orders" },
   { label: "Menu Editor", icon: <LocalCafeIcon />, route: "/admin/menu/edit" },
   {
-    label: "Add Drink",
+    label: "Add Item",
     icon: <AddCircleIcon />,
     route: "/admin/menu/add-drink",
   },

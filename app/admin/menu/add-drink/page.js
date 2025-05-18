@@ -79,7 +79,7 @@ export default function AddDrinkPage() {
         textAlign="center"
         mb={4}
       >
-        ➕ Add New Drink
+        ➕ Add New Item
       </Typography>
 
       <Paper
