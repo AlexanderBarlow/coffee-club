@@ -42,11 +42,7 @@ const menuItems = [
     icon: <CategoryIcon />,
     route: "/admin/menu/add-category",
   },
-  {
-    label: "Tickets",
-    icon: <CategoryIcon />,
-    route: "/admin/orders/ticket",
-  },
+  { label: "Tickets", icon: <CategoryIcon />, route: "/admin/orders/ticket" },
 ];
 
 export default function AdminLayout({ children }) {
@@ -54,7 +50,7 @@ export default function AdminLayout({ children }) {
   const [loading, setLoading] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
+  const handleDrawerToggle = () => setMobileOpen((prev) => !prev);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -65,7 +61,6 @@ export default function AdminLayout({ children }) {
 
       const { data: userData } = await supabase.auth.getUser();
       const user = userData?.user;
-
       if (!user?.email || !user.email.includes("@")) {
         router.push("/login");
       } else {
@@ -75,19 +70,9 @@ export default function AdminLayout({ children }) {
     checkAuth();
   }, [router]);
 
-  useEffect(() => {
-    const handleRouteChange = () => setMobileOpen(false);
-    router.events?.on("routeChangeComplete", handleRouteChange);
-
-    return () => {
-      router.events?.off("routeChangeComplete", handleRouteChange);
-    };
-  }, [router]);
-  
-
   if (loading) return null;
 
-  const drawer = (
+  const drawerContent = (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <Toolbar />
       <Divider />
@@ -98,7 +83,7 @@ export default function AdminLayout({ children }) {
               <ListItemButton
                 onClick={() => {
                   router.push(item.route);
-                  setMobileOpen(false); // Close drawer on navigation
+                  setMobileOpen(false); // ✅ Close mobile drawer on click
                 }}
               >
                 <ListItemIcon sx={{ color: "#6f4e37" }}>
@@ -134,26 +119,20 @@ export default function AdminLayout({ children }) {
 
   return (
     <Box
-      sx={{
-        display: "flex",
-        minHeight: "100vh",
-        overflowX: "hidden",
-        backgroundColor: "#fdf8f4",
-      }}
+      sx={{ display: "flex", minHeight: "100vh", backgroundColor: "#fdf8f4" }}
     >
       <CssBaseline />
 
-      {/* App Bar */}
+      {/* Top AppBar */}
       <AppBar
         position="fixed"
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 1,
           backgroundColor: "#6f4e37",
-          boxShadow: "none",
         }}
       >
         <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Typography variant="h6" fontWeight={700} noWrap>
+          <Typography variant="h6" fontWeight={700}>
             Coffee Club Admin
           </Typography>
           <IconButton
@@ -167,11 +146,10 @@ export default function AdminLayout({ children }) {
         </Toolbar>
       </AppBar>
 
-      {/* Sidebar Navigation */}
+      {/* Navigation Drawer */}
       <Box
         component="nav"
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-        aria-label="admin navigation"
       >
         {/* Mobile Drawer */}
         <Drawer
@@ -182,13 +160,13 @@ export default function AdminLayout({ children }) {
           sx={{
             display: { xs: "block", sm: "none" },
             "& .MuiDrawer-paper": {
-              boxSizing: "border-box",
               width: drawerWidth,
+              boxSizing: "border-box",
               backgroundColor: "#fff",
             },
           }}
         >
-          {drawer}
+          {drawerContent}
         </Drawer>
 
         {/* Desktop Drawer */}
@@ -197,18 +175,18 @@ export default function AdminLayout({ children }) {
           sx={{
             display: { xs: "none", sm: "block" },
             "& .MuiDrawer-paper": {
-              boxSizing: "border-box",
               width: drawerWidth,
+              boxSizing: "border-box",
               backgroundColor: "#fff",
             },
           }}
           open
         >
-          {drawer}
+          {drawerContent}
         </Drawer>
       </Box>
 
-      {/* Main Content */}
+      {/* Main Page Content */}
       <Box
         component="main"
         sx={{
@@ -216,7 +194,6 @@ export default function AdminLayout({ children }) {
           width: { xs: "100%", sm: `calc(100% - ${drawerWidth}px)` },
           p: { xs: 2, md: 4 },
           mt: 8,
-          overflowX: "hidden",
         }}
       >
         {children}
