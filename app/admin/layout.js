@@ -75,6 +75,16 @@ export default function AdminLayout({ children }) {
     checkAuth();
   }, [router]);
 
+  useEffect(() => {
+    const handleRouteChange = () => setMobileOpen(false);
+    router.events?.on("routeChangeComplete", handleRouteChange);
+
+    return () => {
+      router.events?.off("routeChangeComplete", handleRouteChange);
+    };
+  }, [router]);
+  
+
   if (loading) return null;
 
   const drawer = (
@@ -85,7 +95,12 @@ export default function AdminLayout({ children }) {
         {menuItems.map((item) => (
           <ListItem key={item.label} disablePadding>
             <Tooltip title={item.label} placement="right">
-              <ListItemButton onClick={() => router.push(item.route)}>
+              <ListItemButton
+                onClick={() => {
+                  router.push(item.route);
+                  setMobileOpen(false); // Close drawer on navigation
+                }}
+              >
                 <ListItemIcon sx={{ color: "#6f4e37" }}>
                   {item.icon}
                 </ListItemIcon>
