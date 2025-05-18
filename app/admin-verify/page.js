@@ -25,12 +25,16 @@ export default function AdminVerifyForm() {
     setLoading(true);
 
     try {
-      const {
+      let {
         data: { session },
       } = await supabase.auth.getSession();
 
-      const accessToken = session?.access_token;
+      if (!session) {
+        await supabase.auth.refreshSession();
+        session = (await supabase.auth.getSession()).data.session;
+      }
 
+      const accessToken = session?.access_token;
       if (!accessToken) {
         setError("User is not authenticated.");
         setLoading(false);
@@ -44,15 +48,10 @@ export default function AdminVerifyForm() {
           Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ employeeNumber, storeNumber }),
-        credentials: "include", // ✅ REQUIRED for cookie to be saved
       });
-      
 
       const data = await res.json();
-      console.log(data);
       localStorage.setItem("staff_verified", "true");
-
-      
 
       if (!res.ok) {
         setError(data.error || "Verification failed.");
@@ -60,16 +59,11 @@ export default function AdminVerifyForm() {
         return;
       }
 
-      // Simulate delay for smooth UX
-      await new Promise((r) => setTimeout(r, 1000));
       router.refresh();
-
       if (data.role === "ADMIN") {
-        window.location.href = "/admin";
-
+        router.push("/admin");
       } else {
-        window.location.href = `/dashboard/${data.role.toLowerCase()}`;
-
+        router.push(`/dashboard/${data.role.toLowerCase()}`);
       }
     } catch (err) {
       console.error("❌ Unexpected error:", err);
