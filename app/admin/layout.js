@@ -1,56 +1,59 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  Box,
-  Typography,
   AppBar,
   Toolbar,
   Drawer,
+  IconButton,
+  Typography,
+  CssBaseline,
+  Box,
   List,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  CssBaseline,
-  Tooltip,
   Divider,
-  IconButton,
+  Tooltip,
 } from "@mui/material";
+
 import MenuIcon from "@mui/icons-material/Menu";
-import ReceiptIcon from "@mui/icons-material/Receipt";
-import LocalCafeIcon from "@mui/icons-material/LocalCafe";
-import AddCircleIcon from "@mui/icons-material/AddCircle";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import CoffeeIcon from "@mui/icons-material/LocalCafe";
+import AddBoxIcon from "@mui/icons-material/AddBox";
 import CategoryIcon from "@mui/icons-material/Category";
+import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
+import PeopleIcon from "@mui/icons-material/People";
 import LogoutIcon from "@mui/icons-material/Logout";
+
 import { supabase } from "@/lib/supabaseClient";
 
 const drawerWidth = 240;
 
 const menuItems = [
-  { label: "Home", icon: <ReceiptIcon />, route: "/admin" },
-  { label: "Orders", icon: <ReceiptIcon />, route: "/admin/orders" },
-  { label: "Menu Editor", icon: <LocalCafeIcon />, route: "/admin/menu/edit" },
-  {
-    label: "Add Item",
-    icon: <AddCircleIcon />,
-    route: "/admin/menu/add-drink",
-  },
-  {
-    label: "Add Category",
-    icon: <CategoryIcon />,
-    route: "/admin/menu/add-category",
-  },
-  { label: "Tickets", icon: <CategoryIcon />, route: "/admin/orders/ticket" },
+  { label: "Home", icon: <DashboardIcon />, route: "/admin" },
+  { label: "Orders", icon: <ReceiptLongIcon />, route: "/admin/orders" },
+  { label: "Menu Editor", icon: <CoffeeIcon />, route: "/admin/menu/edit" },
+  { label: "Add Item", icon: <AddBoxIcon />, route: "/admin/menu/add-drink" },
+  { label: "Add Category", icon: <CategoryIcon />, route: "/admin/menu/add-category" },
+  { label: "Tickets", icon: <ConfirmationNumberIcon />, route: "/admin/orders/ticket" },
+  { label: "Staff", icon: <PeopleIcon />, route: "/admin/staff" },
 ];
 
 export default function AdminLayout({ children }) {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const handleDrawerToggle = () => setMobileOpen((prev) => !prev);
+
+  useEffect(() => {
+    setMobileOpen(false); // Close drawer on route change
+  }, [pathname]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -73,22 +76,15 @@ export default function AdminLayout({ children }) {
   if (loading) return null;
 
   const drawerContent = (
-    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <Toolbar />
       <Divider />
       <List sx={{ flexGrow: 1 }}>
         {menuItems.map((item) => (
           <ListItem key={item.label} disablePadding>
             <Tooltip title={item.label} placement="right">
-              <ListItemButton
-                onClick={() => {
-                  router.push(item.route);
-                  setMobileOpen(false); // ✅ Close mobile drawer on click
-                }}
-              >
-                <ListItemIcon sx={{ color: "#6f4e37" }}>
-                  {item.icon}
-                </ListItemIcon>
+              <ListItemButton onClick={() => router.push(item.route)}>
+                <ListItemIcon sx={{ color: "#6f4e37" }}>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.label} />
               </ListItemButton>
             </Tooltip>
@@ -118,12 +114,9 @@ export default function AdminLayout({ children }) {
   );
 
   return (
-    <Box
-      sx={{ display: "flex", minHeight: "100vh", backgroundColor: "#fdf8f4" }}
-    >
+    <Box sx={{ display: "flex", minHeight: "100vh", backgroundColor: "#fdf8f4" }}>
       <CssBaseline />
 
-      {/* Top AppBar */}
       <AppBar
         position="fixed"
         sx={{
@@ -131,8 +124,8 @@ export default function AdminLayout({ children }) {
           backgroundColor: "#6f4e37",
         }}
       >
-        <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Typography variant="h6" fontWeight={700}>
+        <Toolbar sx={{ justifyContent: "space-between" }}>
+          <Typography variant="h6" fontWeight={700} noWrap>
             Coffee Club Admin
           </Typography>
           <IconButton
@@ -146,12 +139,7 @@ export default function AdminLayout({ children }) {
         </Toolbar>
       </AppBar>
 
-      {/* Navigation Drawer */}
-      <Box
-        component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-      >
-        {/* Mobile Drawer */}
+      <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -169,7 +157,6 @@ export default function AdminLayout({ children }) {
           {drawerContent}
         </Drawer>
 
-        {/* Desktop Drawer */}
         <Drawer
           variant="permanent"
           sx={{
@@ -186,7 +173,6 @@ export default function AdminLayout({ children }) {
         </Drawer>
       </Box>
 
-      {/* Main Page Content */}
       <Box
         component="main"
         sx={{
