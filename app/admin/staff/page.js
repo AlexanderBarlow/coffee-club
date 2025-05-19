@@ -4,94 +4,202 @@ import { useEffect, useState } from "react";
 import {
     Box,
     Typography,
-    Grid,
     Paper,
     CircularProgress,
-    Avatar,
-    Chip,
+    TextField,
+    InputAdornment,
+    MenuItem,
+    Select,
+    FormControl,
+    InputLabel,
+    IconButton,
     Stack,
+    Button,
+    Modal,
 } from "@mui/material";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
-import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
-import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
+import SearchIcon from "@mui/icons-material/Search";
+import { motion } from "framer-motion";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import RoleIcon from "@mui/icons-material/SupervisorAccount";
+
+const roleOptions = ["BARISTA", "MANAGER", "SUPERVISOR", "ADMIN"];
 
 export default function StaffPage() {
     const [staff, setStaff] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState("");
+    const [sortOption, setSortOption] = useState("default");
+    const [roleSelections, setRoleSelections] = useState({});
+    const [modalOpen, setModalOpen] = useState(false);
+    const [newEmail, setNewEmail] = useState("");
+    const [newRole, setNewRole] = useState("USER");
+    const [employeeNumber, setEmployeeNumber] = useState("");
+    const [storeNumber, setStoreNumber] = useState("");
+    const [addLoading, setAddLoading] = useState(false);
 
-    useEffect(() => {
-        const fetchStaff = async () => {
-            try {
-                const res = await fetch("/api/admin/staff");
-                const data = await res.json();
-                setStaff(data);
-            } catch (err) {
-                console.error("Error fetching staff:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchStaff();
-    }, []);
-
-    const getRoleIcon = (role) => {
-        switch (role) {
-            case "ADMIN":
-                return <AdminPanelSettingsIcon color="primary" />;
-            case "MANAGER":
-                return <SupervisorAccountIcon color="success" />;
-            default:
-                return <PeopleAltIcon color="action" />;
+    const fetchStaff = async () => {
+        try {
+            const res = await fetch("/api/admin/staff");
+            const data = await res.json();
+            setStaff(data);
+            const roleMap = {};
+            data.forEach((s) => (roleMap[s.id] = s.role?.name || "USER"));
+            setRoleSelections(roleMap);
+        } catch (err) {
+            console.error("Failed to fetch staff:", err);
+        } finally {
+            setLoading(false);
         }
     };
 
+    useEffect(() => {
+        fetchStaff();
+    }, []);
+
+    const handleChangeRole = async (id, newRole) => {
+        await fetch("/api/admin/staff/promote", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: id, newRole }),
+        });
+        fetchStaff();
+    };
+
+    const handleAddStaff = async () => {
+        setAddLoading(true);
+        await fetch("/api/admin/staff/add", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: newEmail, role: newRole, employeeNumber, storeNumber }),
+        });
+        setNewEmail("");
+        setNewRole("USER");
+        setEmployeeNumber("");
+        setStoreNumber("");
+        setAddLoading(false);
+        setModalOpen(false);
+        fetchStaff();
+    };
+
+    const filteredStaff = staff
+        .filter((s) => s.email.toLowerCase().includes(search.toLowerCase()))
+        .sort((a, b) => {
+            if (sortOption === "alphabetical") return a.email.localeCompare(b.email);
+            if (sortOption === "role") return a.role.name.localeCompare(b.role.name);
+            return 0;
+        });
+
     return (
-        <Box sx={{ p: { xs: 2, md: 4 } }}>
-            <Typography variant="h4" fontWeight={700} mb={4} textAlign="center">
-                Staff Directory 👥
+        <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1000, mx: "auto" }}>
+            <Typography variant="h4" fontWeight={700} color="#6f4e37" mb={4} textAlign="center">
+                👥 Staff Management
             </Typography>
 
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} mb={4}>
+                <TextField
+                    fullWidth
+                    placeholder="Search by email"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }}
+                />
+                <FormControl fullWidth>
+                    <InputLabel>Sort</InputLabel>
+                    <Select value={sortOption} onChange={(e) => setSortOption(e.target.value)} label="Sort">
+                        <MenuItem value="default">Default</MenuItem>
+                        <MenuItem value="alphabetical">Alphabetical</MenuItem>
+                        <MenuItem value="role">By Role</MenuItem>
+                    </Select>
+                </FormControl>
+            </Stack>
+
+            <Button
+                variant="contained"
+                startIcon={<AddCircleOutlineIcon />}
+                onClick={() => setModalOpen(true)}
+                sx={{ backgroundColor: "#6f4e37", '&:hover': { backgroundColor: "#5c3e2e" }, mb: 3 }}
+            >
+                Add Staff
+            </Button>
+
+            <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
+                <Box sx={{ maxWidth: 400, mx: "auto", mt: 10, p: 3, backgroundColor: "white", borderRadius: 2 }}>
+                    <Typography variant="h6" mb={2}>Add New Staff Member</Typography>
+                    <Stack spacing={2}>
+                        <TextField
+                            label="Email"
+                            fullWidth
+                            value={newEmail}
+                            onChange={(e) => setNewEmail(e.target.value)}
+                        />
+                        <TextField
+                            label="Employee Number"
+                            fullWidth
+                            value={employeeNumber}
+                            onChange={(e) => setEmployeeNumber(e.target.value)}
+                        />
+                        <TextField
+                            label="Store Number"
+                            fullWidth
+                            value={storeNumber}
+                            onChange={(e) => setStoreNumber(e.target.value)}
+                        />
+                        <FormControl fullWidth>
+                            <InputLabel>Role</InputLabel>
+                            <Select value={newRole} onChange={(e) => setNewRole(e.target.value)} label="Role">
+                                {roleOptions.map((role) => (
+                                    <MenuItem key={role} value={role}>{role}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                        <Button
+                            variant="contained"
+                            onClick={handleAddStaff}
+                            disabled={addLoading || !newEmail || !employeeNumber || !storeNumber}
+                            sx={{ backgroundColor: "#6f4e37", '&:hover': { backgroundColor: "#5c3e2e" } }}
+                        >
+                            Submit
+                        </Button>
+                    </Stack>
+                </Box>
+            </Modal>
+
             {loading ? (
-                <Box sx={{ textAlign: "center", mt: 8 }}>
+                <Box textAlign="center" mt={6}>
                     <CircularProgress />
                 </Box>
+            ) : staff.length === 0 ? (
+                <Typography textAlign="center">No staff members found.</Typography>
             ) : (
-                <Grid container spacing={3} justifyContent="center">
-                    {staff.map((member) => (
-                        <Grid key={member.id} item xs={12} sm={6} md={4}>
-                            <Paper
-                                elevation={3}
-                                sx={{ p: 3, borderRadius: 3, height: "100%", textAlign: "center" }}
-                            >
-                                <Avatar
-                                    sx={{ width: 60, height: 60, mx: "auto", mb: 2, bgcolor: "#6f4e37" }}
-                                >
-                                    {member.email.charAt(0).toUpperCase()}
-                                </Avatar>
-
-                                <Typography fontWeight={600} gutterBottom>
-                                    {member.email}
-                                </Typography>
-
-                                <Stack direction="row" spacing={1} justifyContent="center" alignItems="center" mb={1}>
-                                    {getRoleIcon(member.role?.name)}
-                                    <Chip
-                                        label={member.role?.name || "Unknown"}
-                                        variant="outlined"
-                                        size="small"
-                                    />
+                <Stack spacing={3}>
+                    {filteredStaff.map((member) => (
+                        <motion.div key={member.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                            <Paper sx={{ p: 3 }} elevation={3}>
+                                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                    <Box>
+                                        <Typography variant="h6">{member.email}</Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            Role: {member.role?.name || "Unknown"}
+                                        </Typography>
+                                    </Box>
+                                    <Stack direction="row" spacing={2} alignItems="center">
+                                        <FormControl size="small">
+                                            <Select
+                                                value={roleSelections[member.id] || member.role?.name || "USER"}
+                                                onChange={(e) => handleChangeRole(member.id, e.target.value)}
+                                            >
+                                                {roleOptions.map((role) => (
+                                                    <MenuItem key={role} value={role}>{role}</MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                        <RoleIcon color="action" />
+                                    </Stack>
                                 </Stack>
-
-                                <Typography variant="body2" color="text.secondary">
-                                    Store #: {member.storeNumber || "—"}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    Employee ID: {member.employeeNumber || "—"}
-                                </Typography>
                             </Paper>
-                        </Grid>
+                        </motion.div>
                     ))}
-                </Grid>
+                </Stack>
             )}
         </Box>
     );
