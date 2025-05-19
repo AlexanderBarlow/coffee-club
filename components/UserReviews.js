@@ -6,19 +6,13 @@ export default function UserReviews({ reviews }) {
     if (!reviews || reviews.length === 0) {
         return (
             <Box sx={{ mt: 4 }}>
-                <Typography variant="h6" fontWeight={700} mb={2}>
-                    💬 Your Reviews
-                </Typography>
-                <Typography>No reviews yet.</Typography>
+                <Typography color="black">No reviews yet.</Typography>
             </Box>
         );
     }
 
     return (
         <Box sx={{ mt: 4 }}>
-            <Typography variant="h6" fontWeight={700} mb={2}>
-                💬 Your Reviews
-            </Typography>
             {reviews.map((review) => (
                 <Paper
                     key={review.id}
