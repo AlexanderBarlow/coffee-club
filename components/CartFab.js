@@ -6,6 +6,7 @@ import {
   Badge,
   Typography,
   Paper,
+  Button,
   useMediaQuery,
 } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
@@ -14,9 +15,11 @@ import { useCart } from "@/context/CartContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 export default function CartFab() {
   const theme = useTheme();
+  const router = useRouter();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { cart } = useCart();
   const [open, setOpen] = useState(false);
@@ -47,17 +50,8 @@ export default function CartFab() {
     return null;
 
   return (
-    <Box
-      sx={{
-        position: "fixed",
-        bottom: 20,
-        right: 20,
-        zIndex: 9999,
-      }}
-    >
+    <Box sx={{ position: "fixed", bottom: 20, right: 20, zIndex: 9999 }}>
       <Box
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
         onClick={() => setOpen((prev) => !prev)}
         sx={{ position: "relative" }}
       >
@@ -97,10 +91,13 @@ export default function CartFab() {
                   p: 2,
                   borderRadius: 2,
                   backgroundColor: "#fffdfb",
-                  maxHeight: 300,
+                  maxHeight: 320,
                   overflowY: "auto",
                 }}
               >
+                <Typography fontWeight={600} mb={1}>
+                  Cart Preview
+                </Typography>
                 {cart.map((item, idx) => (
                   <Box
                     key={idx}
@@ -118,6 +115,21 @@ export default function CartFab() {
                     </Typography>
                   </Box>
                 ))}
+
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={() => router.push("/cart")}
+                  sx={{
+                    mt: 2,
+                    backgroundColor: "#6f4e37",
+                    "&:hover": { backgroundColor: "#5c3e2e" },
+                    borderRadius: 99,
+                    fontWeight: 600,
+                  }}
+                >
+                  Go to Cart
+                </Button>
               </Paper>
             </motion.div>
           )}
