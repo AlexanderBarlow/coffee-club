@@ -1,4 +1,3 @@
-// app/api/stripe/webhook/route.js
 import Stripe from "stripe";
 import { headers } from "next/headers";
 import { PrismaClient } from "@prisma/client";
@@ -11,13 +10,14 @@ export const config = {
 	},
 };
 
-const stripe = new Stripe(process.env.STRIPE_WEBHOOK_SECRET);
+// Use Stripe secret key for initializing client (not webhook secret!)
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
 	try {
 		const rawBody = await req.arrayBuffer();
 		const bodyBuffer = Buffer.from(rawBody);
-		const reqHeaders = await headers(); // ✅ FIX
+		const reqHeaders = await headers();
 		const sig = reqHeaders.get("stripe-signature");
 
 		let event;
@@ -34,7 +34,6 @@ export async function POST(req) {
 
 		if (event.type === "checkout.session.completed") {
 			const session = event.data.object;
-
 			const userId = session.metadata?.userId;
 			const tempCartId = session.metadata?.tempCartId;
 
@@ -52,20 +51,45 @@ export async function POST(req) {
 				return new Response("Not found", { status: 404 });
 			}
 
+			const orderTotal = session.amount_total / 100;
+
+			// Create Order
 			await prisma.order.create({
 				data: {
 					userId,
 					items: temp.cart,
-					total: session.amount_total / 100,
+					total: orderTotal,
 					status: "PENDING",
 					paymentStatus: "PAID",
-					stripeSessionId: session.id, // ✅ Required
+					stripeSessionId: session.id,
 				},
 			});
 
+			// Delete Temp Checkout
 			await prisma.tempCheckout.delete({ where: { id: tempCartId } });
 
-			console.log(`✅ Order created for Stripe session ${session.id}`);
+			// Fetch User Info
+			const user = await prisma.user.findUnique({ where: { id: userId } });
+			const newPoints = user.points + Math.floor(orderTotal);
+
+			// Determine new tier
+			let newTier = "BRONZE";
+			if (newPoints >= 600) newTier = "VIP";
+			else if (newPoints >= 400) newTier = "GOLD";
+			else if (newPoints >= 200) newTier = "SILVER";
+
+			// Update User
+			await prisma.user.update({
+				where: { id: userId },
+				data: {
+					points: newPoints,
+					tier: newTier,
+				},
+			});
+
+			console.log(
+				`✅ Order created + ${Math.floor(orderTotal)} points awarded to user ${userId} (New tier: ${newTier})`
+			);
 		}
 
 		return new Response("OK", { status: 200 });
