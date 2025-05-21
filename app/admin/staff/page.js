@@ -16,6 +16,8 @@ import {
     Stack,
     Button,
     Modal,
+    useMediaQuery,
+    useTheme,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { motion } from "framer-motion";
@@ -36,6 +38,9 @@ export default function StaffPage() {
     const [employeeNumber, setEmployeeNumber] = useState("");
     const [storeNumber, setStoreNumber] = useState("");
     const [addLoading, setAddLoading] = useState(false);
+
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
     const fetchStaff = async () => {
         try {
@@ -101,11 +106,21 @@ export default function StaffPage() {
                     placeholder="Search by email"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon />
+                            </InputAdornment>
+                        ),
+                    }}
                 />
                 <FormControl fullWidth>
                     <InputLabel>Sort</InputLabel>
-                    <Select value={sortOption} onChange={(e) => setSortOption(e.target.value)} label="Sort">
+                    <Select
+                        value={sortOption}
+                        onChange={(e) => setSortOption(e.target.value)}
+                        label="Sort"
+                    >
                         <MenuItem value="default">Default</MenuItem>
                         <MenuItem value="alphabetical">Alphabetical</MenuItem>
                         <MenuItem value="role">By Role</MenuItem>
@@ -117,14 +132,28 @@ export default function StaffPage() {
                 variant="contained"
                 startIcon={<AddCircleOutlineIcon />}
                 onClick={() => setModalOpen(true)}
-                sx={{ backgroundColor: "#6f4e37", '&:hover': { backgroundColor: "#5c3e2e" }, mb: 3 }}
+                sx={{ backgroundColor: "#6f4e37", "&:hover": { backgroundColor: "#5c3e2e" }, mb: 3 }}
+                fullWidth={isMobile}
             >
                 Add Staff
             </Button>
 
             <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
-                <Box sx={{ maxWidth: 400, mx: "auto", mt: 10, p: 3, backgroundColor: "white", borderRadius: 2 }}>
-                    <Typography variant="h6" mb={2}>Add New Staff Member</Typography>
+                <Box
+                    sx={{
+                        width: "90%",
+                        maxWidth: 400,
+                        mx: "auto",
+                        mt: 10,
+                        p: 3,
+                        backgroundColor: "white",
+                        borderRadius: 2,
+                        boxShadow: 24,
+                    }}
+                >
+                    <Typography variant="h6" mb={2}>
+                        Add New Staff Member
+                    </Typography>
                     <Stack spacing={2}>
                         <TextField
                             label="Email"
@@ -148,7 +177,9 @@ export default function StaffPage() {
                             <InputLabel>Role</InputLabel>
                             <Select value={newRole} onChange={(e) => setNewRole(e.target.value)} label="Role">
                                 {roleOptions.map((role) => (
-                                    <MenuItem key={role} value={role}>{role}</MenuItem>
+                                    <MenuItem key={role} value={role}>
+                                        {role}
+                                    </MenuItem>
                                 ))}
                             </Select>
                         </FormControl>
@@ -156,7 +187,7 @@ export default function StaffPage() {
                             variant="contained"
                             onClick={handleAddStaff}
                             disabled={addLoading || !newEmail || !employeeNumber || !storeNumber}
-                            sx={{ backgroundColor: "#6f4e37", '&:hover': { backgroundColor: "#5c3e2e" } }}
+                            sx={{ backgroundColor: "#6f4e37", "&:hover": { backgroundColor: "#5c3e2e" } }}
                         >
                             Submit
                         </Button>
@@ -175,21 +206,28 @@ export default function StaffPage() {
                     {filteredStaff.map((member) => (
                         <motion.div key={member.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                             <Paper sx={{ p: 3 }} elevation={3}>
-                                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                <Stack
+                                    direction={{ xs: "column", sm: "row" }}
+                                    justifyContent="space-between"
+                                    alignItems="flex-start"
+                                    spacing={2}
+                                >
                                     <Box>
                                         <Typography variant="h6">{member.email}</Typography>
                                         <Typography variant="body2" color="text.secondary">
                                             Role: {member.role?.name || "Unknown"}
                                         </Typography>
                                     </Box>
-                                    <Stack direction="row" spacing={2} alignItems="center">
-                                        <FormControl size="small">
+                                    <Stack direction="row" spacing={1} alignItems="center">
+                                        <FormControl size="small" sx={{ minWidth: 120 }}>
                                             <Select
                                                 value={roleSelections[member.id] || member.role?.name || "USER"}
                                                 onChange={(e) => handleChangeRole(member.id, e.target.value)}
                                             >
                                                 {roleOptions.map((role) => (
-                                                    <MenuItem key={role} value={role}>{role}</MenuItem>
+                                                    <MenuItem key={role} value={role}>
+                                                        {role}
+                                                    </MenuItem>
                                                 ))}
                                             </Select>
                                         </FormControl>

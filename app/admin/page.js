@@ -136,7 +136,7 @@ export default function AdminHomePage() {
           </Button>
           <Button
             variant="outlined"
-            onClick={() => router.push("/admin/menu")}
+            onClick={() => router.push("/admin/menu/edit")}
             sx={{
               color: "#6f4e37",
               borderColor: "#6f4e37",

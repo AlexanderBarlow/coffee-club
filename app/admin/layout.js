@@ -17,17 +17,20 @@ import {
   ListItemText,
   Divider,
   Tooltip,
+  useMediaQuery,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 
 import MenuIcon from "@mui/icons-material/Menu";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import CoffeeIcon from "@mui/icons-material/LocalCafe";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import CategoryIcon from "@mui/icons-material/Category";
-import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import PeopleIcon from "@mui/icons-material/People";
 import LogoutIcon from "@mui/icons-material/Logout";
+import GroupsIcon from "@mui/icons-material/Groups";
 
 import { supabase } from "@/lib/supabaseClient";
 
@@ -36,23 +39,26 @@ const drawerWidth = 240;
 const menuItems = [
   { label: "Home", icon: <DashboardIcon />, route: "/admin" },
   { label: "Orders", icon: <ReceiptLongIcon />, route: "/admin/orders" },
+  { label: "Tickets", icon: <ConfirmationNumberIcon />, route: "/admin/orders/ticket" },
   { label: "Menu Editor", icon: <CoffeeIcon />, route: "/admin/menu/edit" },
   { label: "Add Item", icon: <AddBoxIcon />, route: "/admin/menu/add-drink" },
   { label: "Add Category", icon: <CategoryIcon />, route: "/admin/menu/add-category" },
-  { label: "Tickets", icon: <ConfirmationNumberIcon />, route: "/admin/orders/ticket" },
   { label: "Staff", icon: <PeopleIcon />, route: "/admin/staff" },
+  { label: "Users", icon: <GroupsIcon />, route: "/admin/users" },
 ];
 
 export default function AdminLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const handleDrawerToggle = () => setMobileOpen((prev) => !prev);
 
   useEffect(() => {
-    setMobileOpen(false); // Close drawer on route change
+    setMobileOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -80,16 +86,40 @@ export default function AdminLayout({ children }) {
       <Toolbar />
       <Divider />
       <List sx={{ flexGrow: 1 }}>
-        {menuItems.map((item) => (
-          <ListItem key={item.label} disablePadding>
-            <Tooltip title={item.label} placement="right">
-              <ListItemButton onClick={() => router.push(item.route)}>
-                <ListItemIcon sx={{ color: "#6f4e37" }}>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.label} />
-              </ListItemButton>
-            </Tooltip>
-          </ListItem>
-        ))}
+        {menuItems.map((item) => {
+          const isActive = pathname.startsWith(item.route);
+
+          return (
+            <ListItem key={item.label} disablePadding>
+              <Tooltip title={item.label} placement="right">
+                <ListItemButton
+                  onClick={() => router.push(item.route)}
+                  sx={{
+                    backgroundColor: isActive ? "#fdece2" : "transparent",
+                    "&:hover": {
+                      backgroundColor: "#fddcc0",
+                    },
+                    borderLeft: isActive ? "4px solid #6f4e37" : "4px solid transparent",
+                    px: 2,
+                    py: 1.2,
+                  }}
+                >
+                  <ListItemIcon sx={{ color: "#6f4e37", minWidth: 36 }}>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={item.label}
+                    primaryTypographyProps={{
+                      fontSize: "0.95rem",
+                      fontWeight: 500,
+                      color: "#3e3028",
+                    }}
+                  />
+                </ListItemButton>
+              </Tooltip>
+            </ListItem>
+          );
+        })}
       </List>
       <Divider />
       <Box sx={{ p: 1 }}>
@@ -125,7 +155,12 @@ export default function AdminLayout({ children }) {
         }}
       >
         <Toolbar sx={{ justifyContent: "space-between" }}>
-          <Typography variant="h6" fontWeight={700} noWrap>
+          <Typography
+            variant="h6"
+            fontWeight={700}
+            noWrap
+            sx={{ fontSize: { xs: "1rem", sm: "1.25rem" } }}
+          >
             Coffee Club Admin
           </Typography>
           <IconButton
@@ -139,7 +174,9 @@ export default function AdminLayout({ children }) {
         </Toolbar>
       </AppBar>
 
+      {/* Navigation Drawer */}
       <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
+        {/* Mobile Drawer */}
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -157,6 +194,7 @@ export default function AdminLayout({ children }) {
           {drawerContent}
         </Drawer>
 
+        {/* Desktop Drawer */}
         <Drawer
           variant="permanent"
           sx={{
@@ -173,6 +211,7 @@ export default function AdminLayout({ children }) {
         </Drawer>
       </Box>
 
+      {/* Main Page Content */}
       <Box
         component="main"
         sx={{
