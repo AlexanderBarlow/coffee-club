@@ -50,6 +50,11 @@ export default async function main() {
       employeeNumber: "CFA004",
       storeNumber: "0021",
     },
+    {
+      id: "test-user-id-0001",
+      email: "testuser@coffeeclub.com",
+      role: "USER",
+    },
   ];
 
   for (const user of usersToSeed) {
@@ -69,7 +74,6 @@ export default async function main() {
           storeNumber: user.storeNumber,
         },
       });
-
       console.log(`🔁 Updated ${user.role} user: ${user.email}`);
     } else {
       await prisma.user.create({
@@ -83,13 +87,12 @@ export default async function main() {
           storeNumber: user.storeNumber,
         },
       });
-
       console.log(`✅ Created ${user.role} user: ${user.email}`);
     }
   }
 
-  // Seed additional admin metrics
-  const baristaId = usersToSeed.find(u => u.role === "BARISTA").id;
+  const baristaId = usersToSeed.find((u) => u.role === "BARISTA").id;
+  const testUserId = usersToSeed.find((u) => u.role === "USER").id;
 
   await prisma.payroll.create({
     data: {
@@ -115,11 +118,10 @@ export default async function main() {
     data: {
       userId: baristaId,
       startTime: new Date(),
-      endTime: new Date(Date.now() + 3 * 60 * 60 * 1000), // 3 hours later
+      endTime: new Date(Date.now() + 3 * 60 * 60 * 1000),
       roleAtTime: "BARISTA",
     },
   });
-
 
   await prisma.customerActivity.create({
     data: {
@@ -147,7 +149,28 @@ export default async function main() {
     },
   });
 
-  console.log("📊 Admin metrics seeded.");
+  // 💳 Add a completed order for test user
+  const order = await prisma.order.create({
+    data: {
+      userId: testUserId,
+      stripeSessionId: "test-session-001",
+      items: [{ name: "Iced Mocha", quantity: 1, price: 5.5 }],
+      total: 5.5,
+      status: "COMPLETED",
+      paymentStatus: "PAID",
+    },
+  });
+
+  await prisma.review.create({
+    data: {
+      userId: testUserId,
+      orderId: order.id,
+      rating: 5,
+      comment: "Amazing drink and fast service!",
+    },
+  });
+
+  console.log("📊 Admin metrics and test user seeded.");
 }
 
 main()

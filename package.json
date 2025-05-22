@@ -39,6 +39,7 @@
     "react-dom": "^19.0.0",
     "react-leaflet": "^5.0.0",
     "react-use": "^17.6.0",
+    "recharts": "^2.15.3",
     "stripe": "^18.0.0",
     "stripe-cli": "^0.1.0",
     "undici": "^6.21.2"

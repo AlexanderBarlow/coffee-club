@@ -3,10 +3,7 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    const users = await prisma.user.findMany({
-      include: { role: true },
-    });
-
+    const users = await prisma.user.findMany({ include: { role: true } });
     const roles = users.reduce((acc, user) => {
       const roleName = user.role?.name || "UNKNOWN";
       acc[roleName] = (acc[roleName] || 0) + 1;
@@ -25,14 +22,14 @@ export async function GET() {
     last7Days.setDate(now.getDate() - 6);
 
     const weeklySales = {};
-    for (let i = 0; i < 7; i++) {
+    for (let i = 6; i >= 0; i--) {
       const day = new Date();
       day.setDate(now.getDate() - i);
       const label = day.toLocaleDateString("en-US", { weekday: "short" });
       weeklySales[label] = 0;
     }
 
-    // 📈 Weekly revenue breakdown
+    // Sales per day
     orders.forEach((o) => {
       const date = new Date(o.createdAt);
       if (date >= last7Days) {
@@ -41,19 +38,19 @@ export async function GET() {
       }
     });
 
-    // 🔁 Repeat customers
+    // Repeat customer stats
     const orderCounts = {};
-    for (const order of orders) {
+    orders.forEach((order) => {
       orderCounts[order.userId] = (orderCounts[order.userId] || 0) + 1;
-    }
+    });
     const repeatCustomers = Object.values(orderCounts).filter(
-      (count) => count > 1
+      (c) => c > 1
     ).length;
     const uniqueCustomers = Object.keys(orderCounts).length;
     const repeatRate =
       uniqueCustomers > 0 ? (repeatCustomers / uniqueCustomers) * 100 : 0;
 
-    // 📦 Top Items
+    // Top items
     const itemCounts = {};
     orders.forEach((order) => {
       try {
@@ -62,10 +59,11 @@ export async function GET() {
           : JSON.parse(order.items);
         items.forEach((item) => {
           const key = item.name;
-          itemCounts[key] = (itemCounts[key] || 0) + item.quantity || 1;
+          const qty = item.quantity || 1;
+          itemCounts[key] = (itemCounts[key] || 0) + qty;
         });
       } catch (e) {
-        console.warn("Failed to parse order items:", order.id);
+        console.warn("❌ Failed to parse order items:", order.id);
       }
     });
     const topItems = Object.entries(itemCounts)
@@ -73,10 +71,10 @@ export async function GET() {
       .slice(0, 5)
       .map(([name, count]) => ({ name, count }));
 
-    // 💵 Avg ticket value
+    // Average ticket
     const avgTicket = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-    // ⏱️ Avg ticket time
+    // Avg order time
     const ticketDurations = orders.map(
       (o) => new Date(o.updatedAt) - new Date(o.createdAt)
     );
@@ -84,9 +82,37 @@ export async function GET() {
       ticketDurations.reduce((a, b) => a + b, 0) / ticketDurations.length || 0;
     const avgTicketTimeMinutes = Math.round(avgTicketTimeMs / 1000 / 60);
 
-    // ⭐ Avg satisfaction rating
+    // Avg rating
     const avgRatingResult = await prisma.review.aggregate({
       _avg: { rating: true },
+    });
+
+    // Total labor hours
+    const shifts = await prisma.shift.findMany();
+    const totalLaborHours = shifts.reduce((sum, shift) => {
+      const start = new Date(shift.startTime);
+      const end = new Date(shift.endTime);
+      return sum + (end - start) / (1000 * 60 * 60);
+    }, 0);
+
+    // Inventory restocks per day
+    const inventoryLogs = await prisma.inventoryLog.findMany();
+    const inventoryRestocks = {};
+    inventoryLogs.forEach((log) => {
+      const date = new Date(log.createdAt).toLocaleDateString("en-US", {
+        weekday: "short",
+      });
+      if (log.type === "restock") {
+        inventoryRestocks[date] = (inventoryRestocks[date] || 0) + log.quantity;
+      }
+    });
+
+    // Reward redemptions
+    const rewardRedemptions = await prisma.rewardRedemption.findMany();
+    const rewardData = {};
+    rewardRedemptions.forEach((r) => {
+      const name = r.rewardName;
+      rewardData[name] = (rewardData[name] || 0) + 1;
     });
 
     return new Response(
@@ -102,6 +128,10 @@ export async function GET() {
         avgTicketTimeMinutes,
         avgRating: avgRatingResult._avg.rating || null,
         uniqueCustomers,
+
+        totalLaborHours: Math.round(totalLaborHours),
+        inventoryRestocks,
+        rewardRedemptions: rewardData,
       }),
       { status: 200 }
     );
