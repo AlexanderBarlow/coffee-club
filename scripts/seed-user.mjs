@@ -87,6 +87,67 @@ export default async function main() {
       console.log(`✅ Created ${user.role} user: ${user.email}`);
     }
   }
+
+  // Seed additional admin metrics
+  const baristaId = usersToSeed.find(u => u.role === "BARISTA").id;
+
+  await prisma.payroll.create({
+    data: {
+      userId: baristaId,
+      hoursWorked: 80,
+      hourlyRate: 15,
+      totalPay: 1200,
+      payPeriodStart: new Date("2024-05-01"),
+      payPeriodEnd: new Date("2024-05-15"),
+    },
+  });
+
+  await prisma.inventoryLog.create({
+    data: {
+      itemName: "Espresso Beans",
+      quantity: 10,
+      type: "restock",
+      note: "Monthly restock",
+    },
+  });
+
+  await prisma.shift.create({
+    data: {
+      userId: baristaId,
+      startTime: new Date(),
+      endTime: new Date(Date.now() + 3 * 60 * 60 * 1000), // 3 hours later
+      roleAtTime: "BARISTA",
+    },
+  });
+
+
+  await prisma.customerActivity.create({
+    data: {
+      userId: baristaId,
+      action: "review_submitted",
+      detail: "5 stars for Caramel Latte",
+    },
+  });
+
+  await prisma.rewardRedemption.create({
+    data: {
+      userId: baristaId,
+      rewardName: "Free Coffee",
+      pointsUsed: 100,
+    },
+  });
+
+  await prisma.storeMetricsSnapshot.create({
+    data: {
+      date: new Date(),
+      totalRevenue: 850,
+      totalOrders: 34,
+      averageOrderValue: 25,
+      totalLaborHours: 16,
+    },
+  });
+
+  console.log("📊 Admin metrics seeded.");
 }
 
 main()

@@ -79,222 +79,104 @@ export default function AdminHomePage() {
     scales: { y: { beginAtZero: true } },
   };
 
-  const totalEmployees = stats
-    ? Object.entries(stats.employeeCounts).reduce(
-        (sum, [role, count]) =>
-          ["USER", "UNKNOWN"].includes(role) ? sum : sum + count,
-        0
-      )
-    : 0;
-
-  const staffToUserRatio = stats?.employeeCounts?.USER
-    ? `${(totalEmployees / stats.employeeCounts.USER).toFixed(2)}:1`
-    : "-";
-
   const fadeCard = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.5 },
   };
 
+  const metricCards = [
+    { label: "Total Orders", value: stats?.totalOrders },
+    { label: "Revenue", value: `$${stats?.totalRevenue.toFixed(2)}` },
+    { label: "Avg Ticket", value: `$${stats?.avgTicket.toFixed(2)}` },
+    { label: "Avg Time", value: `${stats?.avgTicketTimeMinutes} mins` },
+    { label: "Satisfaction", value: stats?.avgRating ? `${stats.avgRating.toFixed(1)} ★` : "N/A" },
+  ];
+
+  const chartPlaceholders = [
+    "Sales This Week",
+    "Labor Hours",
+    "Avg Order Time",
+    "Inventory Restock",
+    "Reward Redemptions",
+  ];
+
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
         <Box textAlign="center" mb={4}>
-          <Typography
-            variant={isMobile ? "h4" : "h3"}
-            fontWeight={700}
-            color="#6f4e37"
-            gutterBottom
-          >
+          <Typography variant={isMobile ? "h4" : "h3"} fontWeight={700} color="#6f4e37" gutterBottom>
             Welcome, Admin ☕
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Manage your team, monitor sales, and streamline operations.
+            Monitor performance, track staff metrics, and evaluate shop health.
           </Typography>
         </Box>
 
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={2}
-          mb={5}
-          justifyContent="center"
-        >
+        <Stack direction={{ xs: "column", md: "row" }} spacing={2} mb={5} justifyContent="center">
           <Button
             variant="contained"
             onClick={() => router.push("/admin/orders")}
-            sx={{
-              backgroundColor: "#6f4e37",
-              "&:hover": { backgroundColor: "#5c3e2e" },
-            }}
+            sx={{ backgroundColor: "#6f4e37", "&:hover": { backgroundColor: "#5c3e2e" } }}
           >
             View Orders
           </Button>
           <Button
             variant="outlined"
             onClick={() => router.push("/admin/menu/edit")}
-            sx={{
-              color: "#6f4e37",
-              borderColor: "#6f4e37",
-              "&:hover": { borderColor: "#5c3e2e", color: "#5c3e2e" },
-            }}
+            sx={{ color: "#6f4e37", borderColor: "#6f4e37", "&:hover": { borderColor: "#5c3e2e", color: "#5c3e2e" } }}
           >
             Manage Menu
           </Button>
         </Stack>
 
         {loading || !stats ? (
-          <Box sx={{ textAlign: "center", mt: 8 }}>
-            <CircularProgress />
-          </Box>
+          <Box textAlign="center" mt={8}><CircularProgress /></Box>
         ) : (
-          <Stack spacing={4} alignItems="center">
-            <Grid container spacing={2} justifyContent="center">
-              {[
-                "Total Orders",
-                "Revenue",
-                "Avg Ticket",
-                "Avg Time",
-                "Satisfaction",
-                "Repeat Users",
-                "Unique Users",
-              ].map((label, i) => {
-                const values = [
-                  stats.totalOrders,
-                  `$${stats.totalRevenue.toFixed(2)}`,
-                  `$${stats.avgTicket.toFixed(2)}`,
-                  `${stats.avgTicketTimeMinutes} mins`,
-                  stats.avgRating ? `${stats.avgRating.toFixed(1)} ★` : "N/A",
-                  `${stats.repeatCustomers} (${stats.repeatRate}%)`,
-                  stats.uniqueCustomers,
-                ];
-                return (
-                  <Grid
-                    item
-                    xs={12}
-                    sm={6}
-                    key={label}
-                    sx={{ display: "flex", justifyContent: "center" }}
-                  >
-                    <motion.div
-                      {...fadeCard}
-                      style={{ width: "100%", maxWidth: 350 }}
-                    >
-                      <Paper
-                        elevation={2}
-                        sx={{ p: 3, textAlign: "center", height: "100%" }}
-                      >
-                        <Typography variant="subtitle1" color="text.secondary">
-                          {label}
-                        </Typography>
-                        <Typography
-                          variant="h5"
-                          fontWeight={700}
-                          color="#6f4e37"
-                          mt={1}
-                        >
-                          {values[i]}
-                        </Typography>
-                      </Paper>
-                    </motion.div>
-                  </Grid>
-                );
-              })}
+          <>
+            <Grid container spacing={3} mb={4} justifyContent="center">
+              {metricCards.map(({ label, value }) => (
+                <Grid item xs={12} sm={6} md={4} lg={2.4} key={label}>
+                  <motion.div {...fadeCard}>
+                    <Paper elevation={3} sx={{ p: 2, textAlign: "center" }}>
+                      <Typography variant="subtitle2" color="text.secondary">{label}</Typography>
+                      <Typography variant="h6" fontWeight={700} color="#6f4e37">{value}</Typography>
+                    </Paper>
+                  </motion.div>
+                </Grid>
+              ))}
             </Grid>
 
-            <Grid container spacing={2} justifyContent="center">
-              <Grid
-                item
-                xs={12}
-                md={6}
-                sx={{ display: "flex", justifyContent: "center" }}
-              >
-                <motion.div
-                  {...fadeCard}
-                  style={{ width: "100%", maxWidth: 500 }}
-                >
-                  <Paper elevation={2} sx={{ p: 3 }}>
-                    <Typography
-                      variant="h6"
-                      fontWeight={700}
-                      color="#6f4e37"
-                      mb={2}
-                    >
-                      Team Overview
-                    </Typography>
-                    {Object.entries(stats.employeeCounts)
-                      .filter(([r]) => r !== "USER")
-                      .map(([role, count]) => (
-                        <Typography key={role} sx={{ mb: 0.5 }}>
-                          <strong>{role}:</strong> {count}
-                        </Typography>
-                      ))}
-                    <Divider sx={{ my: 2 }} />
-                    <Typography variant="body2" color="text.secondary">
-                      Staff-to-User Ratio: <strong>{staffToUserRatio}</strong>
-                    </Typography>
-                  </Paper>
-                </motion.div>
-              </Grid>
-
-              <Grid
-                item
-                xs={12}
-                md={6}
-                sx={{ display: "flex", justifyContent: "center" }}
-              >
-                <motion.div
-                  {...fadeCard}
-                  style={{ width: "100%", maxWidth: 500 }}
-                >
-                  <Paper elevation={2} sx={{ p: 3 }}>
-                    <Typography
-                      variant="h6"
-                      fontWeight={700}
-                      color="#6f4e37"
-                      mb={2}
-                    >
-                      Top Ordered Items
-                    </Typography>
-                    <Stack spacing={1}>
-                      {stats.topItems.map((item, i) => (
-                        <Box
-                          key={i}
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <Typography>{item.name}</Typography>
-                          <Typography fontWeight={600}>{item.count}</Typography>
-                        </Box>
-                      ))}
-                    </Stack>
-                  </Paper>
-                </motion.div>
-              </Grid>
+            <Grid container spacing={3} justifyContent="center" mb={3}>
+              {chartPlaceholders.slice(0, 2).map((title, i) => (
+                <Grid item xs={12} md={6} key={title}>
+                  <motion.div {...fadeCard}>
+                    <Paper elevation={2} sx={{ p: 2 }}>
+                      <Typography variant="h6" fontWeight={700} color="#6f4e37" mb={1}>{title}</Typography>
+                      <Box sx={{ height: 300 }}>
+                        <Line data={salesData} options={salesOptions} />
+                      </Box>
+                    </Paper>
+                  </motion.div>
+                </Grid>
+              ))}
             </Grid>
 
-            <motion.div {...fadeCard} style={{ width: "100%", maxWidth: 1000 }}>
-              <Paper elevation={2} sx={{ p: 3 }}>
-                <Typography
-                  variant="h6"
-                  fontWeight={700}
-                  color="#6f4e37"
-                  mb={2}
-                >
-                  Sales This Week
-                </Typography>
-                <Box sx={{ height: { xs: 250, md: 400 } }}>
-                  <Line data={salesData} options={salesOptions} />
-                </Box>
-              </Paper>
-            </motion.div>
-          </Stack>
+            <Grid container spacing={3} justifyContent="center">
+              {chartPlaceholders.slice(2).map((title, i) => (
+                <Grid item xs={12} sm={4} key={title}>
+                  <motion.div {...fadeCard}>
+                    <Paper elevation={2} sx={{ p: 2 }}>
+                      <Typography variant="h6" fontWeight={700} color="#6f4e37" mb={1}>{title}</Typography>
+                      <Box sx={{ height: 250 }}>
+                        <Line data={salesData} options={salesOptions} />
+                      </Box>
+                    </Paper>
+                  </motion.div>
+                </Grid>
+              ))}
+            </Grid>
+          </>
         )}
       </motion.div>
     </Container>

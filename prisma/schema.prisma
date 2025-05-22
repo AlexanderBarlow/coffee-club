@@ -8,28 +8,32 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  tier      Tier     @default(BRONZE)
-  points    Int      @default(0)
-
-  roleId    String?
-  role      Role?    @relation(fields: [roleId], references: [id])
-
+  id             String  @id @default(uuid())
+  email          String  @unique
+  tier           Tier    @default(BRONZE)
+  points         Int     @default(0)
+  roleId         String?
+  role           Role?   @relation(fields: [roleId], references: [id])
   employeeNumber String?
   storeNumber    String?
+  storeId        String?
+  store          Store?  @relation("StoreToUsers", fields: [storeId], references: [id])
 
-  orders    Order[]
-  reviews   Review[]
+  orders         Order[]
+  reviews        Review[]
+  payrollRecords Payroll[]
+  shifts         Shift[]
+  activities     CustomerActivity[]
+  redemptions    RewardRedemption[]
+
   createdAt DateTime @default(now())
 }
 
-
 model Role {
-  id        String     @id @default(uuid())
-  name      RoleName   @unique
+  id        String   @id @default(uuid())
+  name      RoleName @unique
   users     User[]
-  createdAt DateTime   @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Order {
@@ -85,7 +89,6 @@ model Drink {
   createdAt        DateTime @default(now())
   customizeOptions Json?
 
-  // Relations
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id])
 
@@ -121,9 +124,77 @@ model Milk {
 }
 
 model Rewards {
-  id          String   @id @default(uuid())
-  name        String   @unique
+  id          String @id @default(uuid())
+  name        String @unique
   description String
+}
+
+model Payroll {
+  id             String   @id @default(uuid())
+  user           User     @relation(fields: [userId], references: [id])
+  userId         String
+  hoursWorked    Float
+  hourlyRate     Float
+  totalPay       Float
+  payPeriodStart DateTime
+  payPeriodEnd   DateTime
+  createdAt      DateTime @default(now())
+}
+
+model Shift {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  startTime  DateTime
+  endTime    DateTime
+  roleAtTime String
+  createdAt  DateTime @default(now())
+}
+
+model Store {
+  id           String   @id @default(uuid())
+  name         String
+  location     String
+  contactEmail String
+  staff        User[]   @relation("StoreToUsers")
+  createdAt    DateTime @default(now())
+}
+
+model InventoryLog {
+  id        String   @id @default(uuid())
+  itemName  String
+  quantity  Int
+  type      String // e.g., "restock" or "usage"
+  note      String?
+  createdAt DateTime @default(now())
+}
+
+model CustomerActivity {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  action    String // e.g., "review_submitted"
+  detail    String
+  createdAt DateTime @default(now())
+}
+
+model RewardRedemption {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  rewardName String
+  pointsUsed Int
+  redeemedAt DateTime @default(now())
+}
+
+model StoreMetricsSnapshot {
+  id                String   @id @default(uuid())
+  date              DateTime
+  totalRevenue      Float
+  totalOrders       Int
+  averageOrderValue Float
+  totalLaborHours   Float
+  createdAt         DateTime @default(now())
 }
 
 enum Tier {
