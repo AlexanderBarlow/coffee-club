@@ -87,7 +87,10 @@ export default function AdminLayout({ children }) {
       <Divider />
       <List sx={{ flexGrow: 1 }}>
         {menuItems.map((item) => {
-          const isActive = pathname.startsWith(item.route);
+          const isActive =
+            item.route === "/admin"
+              ? pathname === "/admin"
+              : pathname.startsWith(item.route);
 
           return (
             <ListItem key={item.label} disablePadding>
