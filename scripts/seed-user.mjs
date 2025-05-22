@@ -5,7 +5,6 @@ const prisma = new PrismaClient();
 export default async function main() {
   console.log("🌱 Seeding roles...");
 
-  // Create roles if they don't exist
   const roleNames = ["ADMIN", "BARISTA", "MANAGER", "SUPERVISOR", "USER"];
   const roles = {};
 
@@ -18,9 +17,8 @@ export default async function main() {
     roles[name] = role.id;
   }
 
-  console.log("✅ Roles created or already exist.");
+  console.log("✅ Roles created.");
 
-  // Seed or update one user per role
   const usersToSeed = [
     {
       id: "8436fd35-9b2d-44cc-92b2-c3e47d467297",
@@ -55,55 +53,82 @@ export default async function main() {
       email: "testuser@coffeeclub.com",
       role: "USER",
     },
+    {
+      id: "extra-barista-1",
+      email: "barista2@coffeeclub.com",
+      role: "BARISTA",
+      employeeNumber: "CFA005",
+      storeNumber: "0022",
+    },
+    {
+      id: "extra-manager-1",
+      email: "manager2@coffeeclub.com",
+      role: "MANAGER",
+      employeeNumber: "CFA006",
+      storeNumber: "0022",
+    },
   ];
 
   for (const user of usersToSeed) {
-    const existing = await prisma.user.findUnique({
+    await prisma.user.upsert({
       where: { id: user.id },
+      update: {
+        email: user.email,
+        tier: "VIP",
+        points: 999,
+        roleId: roles[user.role],
+        employeeNumber: user.employeeNumber,
+        storeNumber: user.storeNumber,
+      },
+      create: {
+        id: user.id,
+        email: user.email,
+        tier: "VIP",
+        points: 999,
+        roleId: roles[user.role],
+        employeeNumber: user.employeeNumber,
+        storeNumber: user.storeNumber,
+      },
     });
 
-    if (existing) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          email: user.email,
-          tier: "VIP",
-          points: 999,
-          roleId: roles[user.role],
-          employeeNumber: user.employeeNumber,
-          storeNumber: user.storeNumber,
-        },
-      });
-      console.log(`🔁 Updated ${user.role} user: ${user.email}`);
-    } else {
-      await prisma.user.create({
-        data: {
-          id: user.id,
-          email: user.email,
-          tier: "VIP",
-          points: 999,
-          roleId: roles[user.role],
-          employeeNumber: user.employeeNumber,
-          storeNumber: user.storeNumber,
-        },
-      });
-      console.log(`✅ Created ${user.role} user: ${user.email}`);
-    }
+    console.log(`✅ Created or updated ${user.role} user: ${user.email}`);
   }
 
   const baristaId = usersToSeed.find((u) => u.role === "BARISTA").id;
   const testUserId = usersToSeed.find((u) => u.role === "USER").id;
 
-  await prisma.payroll.create({
-    data: {
-      userId: baristaId,
-      hoursWorked: 80,
-      hourlyRate: 15,
-      totalPay: 1200,
-      payPeriodStart: new Date("2024-05-01"),
-      payPeriodEnd: new Date("2024-05-15"),
-    },
-  });
+  const payrollDates = [
+    { start: "2024-05-01", end: "2024-05-15" },
+    { start: "2024-05-16", end: "2024-05-31" },
+    { start: "2024-06-01", end: "2024-06-15" },
+  ];
+
+  for (const { start, end } of payrollDates) {
+    await prisma.payroll.create({
+      data: {
+        userId: baristaId,
+        hoursWorked: 80,
+        hourlyRate: 15,
+        totalPay: 1200,
+        payPeriodStart: new Date(start),
+        payPeriodEnd: new Date(end),
+      },
+    });
+
+    for (let i = 0; i < 10; i++) {
+      const shiftDate = new Date(start);
+      shiftDate.setDate(shiftDate.getDate() + i);
+
+      await prisma.shift.create({
+        data: {
+          userId: baristaId,
+          startTime: new Date(shiftDate.setHours(8, 0, 0)),
+          endTime: new Date(shiftDate.setHours(16, 0, 0)),
+          roleAtTime: "BARISTA",
+        },
+      });
+    }
+  }
 
   await prisma.inventoryLog.create({
     data: {
@@ -111,15 +136,6 @@ export default async function main() {
       quantity: 10,
       type: "restock",
       note: "Monthly restock",
-    },
-  });
-
-  await prisma.shift.create({
-    data: {
-      userId: baristaId,
-      startTime: new Date(),
-      endTime: new Date(Date.now() + 3 * 60 * 60 * 1000),
-      roleAtTime: "BARISTA",
     },
   });
 
@@ -139,17 +155,6 @@ export default async function main() {
     },
   });
 
-  await prisma.storeMetricsSnapshot.create({
-    data: {
-      date: new Date(),
-      totalRevenue: 850,
-      totalOrders: 34,
-      averageOrderValue: 25,
-      totalLaborHours: 16,
-    },
-  });
-
-  // 💳 Add a completed order for test user
   const order = await prisma.order.create({
     data: {
       userId: testUserId,
@@ -170,7 +175,17 @@ export default async function main() {
     },
   });
 
-  console.log("📊 Admin metrics and test user seeded.");
+  await prisma.storeMetricsSnapshot.create({
+    data: {
+      date: new Date(),
+      totalRevenue: 850,
+      totalOrders: 34,
+      averageOrderValue: 25,
+      totalLaborHours: 240,
+    },
+  });
+
+  console.log("📊 Admin metrics and test data seeded.");
 }
 
 main()

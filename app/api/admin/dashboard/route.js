@@ -1,17 +1,23 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-export async function GET() {
+export async function GET(req) {
   try {
     const users = await prisma.user.findMany({ include: { role: true } });
+
     const roles = users.reduce((acc, user) => {
       const roleName = user.role?.name || "UNKNOWN";
       acc[roleName] = (acc[roleName] || 0) + 1;
       return acc;
     }, {});
 
+    const userIds = users.map((u) => u.id);
+
     const orders = await prisma.order.findMany({
-      where: { status: "COMPLETED" },
+      where: {
+        status: "COMPLETED",
+        userId: { in: userIds },
+      },
     });
 
     const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
@@ -29,7 +35,6 @@ export async function GET() {
       weeklySales[label] = 0;
     }
 
-    // Sales per day
     orders.forEach((o) => {
       const date = new Date(o.createdAt);
       if (date >= last7Days) {
@@ -38,25 +43,18 @@ export async function GET() {
       }
     });
 
-    // Repeat customer stats
     const orderCounts = {};
     orders.forEach((order) => {
       orderCounts[order.userId] = (orderCounts[order.userId] || 0) + 1;
     });
-    const repeatCustomers = Object.values(orderCounts).filter(
-      (c) => c > 1
-    ).length;
+    const repeatCustomers = Object.values(orderCounts).filter((c) => c > 1).length;
     const uniqueCustomers = Object.keys(orderCounts).length;
-    const repeatRate =
-      uniqueCustomers > 0 ? (repeatCustomers / uniqueCustomers) * 100 : 0;
+    const repeatRate = uniqueCustomers > 0 ? (repeatCustomers / uniqueCustomers) * 100 : 0;
 
-    // Top items
     const itemCounts = {};
     orders.forEach((order) => {
       try {
-        const items = Array.isArray(order.items)
-          ? order.items
-          : JSON.parse(order.items);
+        const items = Array.isArray(order.items) ? order.items : JSON.parse(order.items);
         items.forEach((item) => {
           const key = item.name;
           const qty = item.quantity || 1;
@@ -71,10 +69,8 @@ export async function GET() {
       .slice(0, 5)
       .map(([name, count]) => ({ name, count }));
 
-    // Average ticket
     const avgTicket = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-    // Avg order time
     const ticketDurations = orders.map(
       (o) => new Date(o.updatedAt) - new Date(o.createdAt)
     );
@@ -82,12 +78,10 @@ export async function GET() {
       ticketDurations.reduce((a, b) => a + b, 0) / ticketDurations.length || 0;
     const avgTicketTimeMinutes = Math.round(avgTicketTimeMs / 1000 / 60);
 
-    // Avg rating
     const avgRatingResult = await prisma.review.aggregate({
       _avg: { rating: true },
     });
 
-    // Total labor hours
     const shifts = await prisma.shift.findMany();
     const totalLaborHours = shifts.reduce((sum, shift) => {
       const start = new Date(shift.startTime);
@@ -95,7 +89,6 @@ export async function GET() {
       return sum + (end - start) / (1000 * 60 * 60);
     }, 0);
 
-    // Inventory restocks per day
     const inventoryLogs = await prisma.inventoryLog.findMany();
     const inventoryRestocks = {};
     inventoryLogs.forEach((log) => {
@@ -107,12 +100,25 @@ export async function GET() {
       }
     });
 
-    // Reward redemptions
     const rewardRedemptions = await prisma.rewardRedemption.findMany();
     const rewardData = {};
     rewardRedemptions.forEach((r) => {
       const name = r.rewardName;
       rewardData[name] = (rewardData[name] || 0) + 1;
+    });
+
+    const payrolls = await prisma.payroll.findMany();
+    const payrollByMonth = {};
+    const revenueByMonth = {};
+
+    payrolls.forEach((entry) => {
+      const label = `${entry.payPeriodStart.getFullYear()}-${entry.payPeriodStart.getMonth() + 1}`;
+      payrollByMonth[label] = (payrollByMonth[label] || 0) + entry.totalPay;
+    });
+
+    orders.forEach((order) => {
+      const label = `${new Date(order.createdAt).getFullYear()}-${new Date(order.createdAt).getMonth() + 1}`;
+      revenueByMonth[label] = (revenueByMonth[label] || 0) + order.total;
     });
 
     return new Response(
@@ -132,6 +138,9 @@ export async function GET() {
         totalLaborHours: Math.round(totalLaborHours),
         inventoryRestocks,
         rewardRedemptions: rewardData,
+
+        payrollByMonth,
+        revenueByMonth,
       }),
       { status: 200 }
     );

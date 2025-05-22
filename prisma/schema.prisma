@@ -16,8 +16,6 @@ model User {
   role           Role?   @relation(fields: [roleId], references: [id])
   employeeNumber String?
   storeNumber    String?
-  storeId        String?
-  store          Store?  @relation("StoreToUsers", fields: [storeId], references: [id])
 
   orders         Order[]
   reviews        Review[]
@@ -149,15 +147,6 @@ model Shift {
   endTime    DateTime
   roleAtTime String
   createdAt  DateTime @default(now())
-}
-
-model Store {
-  id           String   @id @default(uuid())
-  name         String
-  location     String
-  contactEmail String
-  staff        User[]   @relation("StoreToUsers")
-  createdAt    DateTime @default(now())
 }
 
 model InventoryLog {
