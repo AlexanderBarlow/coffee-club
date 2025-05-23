@@ -20,7 +20,6 @@ export default function AdminVerifyPage() {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [employeeNumber, setEmployeeNumber] = useState("");
-  const [storeNumber, setStoreNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -46,7 +45,7 @@ export default function AdminVerifyPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ employeeNumber, storeNumber }),
+        body: JSON.stringify({ employeeNumber }),
       });
 
       const result = await res.json();
@@ -57,14 +56,22 @@ export default function AdminVerifyPage() {
         return;
       }
 
-      // Save flag and redirect based on role
       localStorage.setItem("staff_verified", "true");
 
+      // ✅ Redirect by role
       setTimeout(() => {
-        if (result.role === "ADMIN") {
-          router.push("/admin");
-        } else {
-          router.push(`/dashboard/${result.role.toLowerCase()}`);
+        switch (result.role) {
+          case "BARISTA":
+            router.push("/admin/barista");
+            break;
+          case "ADMIN":
+          case "MANAGER":
+          case "SUPERVISOR":
+            router.push("/admin");
+            break;
+          default:
+            setError("Your role does not have access.");
+            break;
         }
       }, 1000);
     } catch (err) {
@@ -96,7 +103,7 @@ export default function AdminVerifyPage() {
         }}
       >
         <Typography variant="h5" fontWeight={700} color="#6f4e37" textAlign="center" mb={3}>
-          Admin Verification
+          Staff Verification
         </Typography>
 
         <form onSubmit={handleVerify}>
@@ -107,14 +114,6 @@ export default function AdminVerifyPage() {
             margin="normal"
             value={employeeNumber}
             onChange={(e) => setEmployeeNumber(e.target.value)}
-          />
-          <TextField
-            label="Store Number"
-            fullWidth
-            required
-            margin="normal"
-            value={storeNumber}
-            onChange={(e) => setStoreNumber(e.target.value)}
           />
 
           {error && (
