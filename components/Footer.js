@@ -1,9 +1,41 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Box, Typography, IconButton, Button } from "@mui/material";
 import { Facebook, Instagram, Twitter } from "@mui/icons-material";
 
 export default function Footer() {
+    const [deferredPrompt, setDeferredPrompt] = useState(null);
+    const [showInstallButton, setShowInstallButton] = useState(false);
+
+    useEffect(() => {
+        const handleBeforeInstallPrompt = (e) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+            setShowInstallButton(true);
+        };
+
+        window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+        return () => {
+            window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+        };
+    }, []);
+
+    const handleInstallClick = async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === "accepted") {
+                console.log("✅ App installed");
+                setDeferredPrompt(null);
+                setShowInstallButton(false);
+            } else {
+                console.log("❌ App install dismissed");
+            }
+        }
+    };
+
     return (
         <Box
             component="footer"
@@ -11,7 +43,6 @@ export default function Footer() {
                 mt: 4,
                 py: 3,
                 px: 2,
-                pt: 0,
                 backgroundColor: "#fdf8f4",
                 borderTop: "1px solid #e0e0e0",
                 textAlign: "center",
@@ -31,16 +62,13 @@ export default function Footer() {
                     <Twitter />
                 </IconButton>
             </Box>
-            <Button
-                variant="contained"
-                color="primary"
-                onClick={() => {
-                    if (window.matchMedia("(display-mode: standalone)").matches) return;
-                    window.location.href = "/manifest.json";
-                }}
-            >
-                Get the App
-            </Button>
+
+            {showInstallButton && (
+                <Button variant="contained" color="primary" onClick={handleInstallClick}>
+                    Get the App
+                </Button>
+            )}
+
             <Typography variant="caption" display="block" mt={2}>
                 © {new Date().getFullYear()} Coffee Club. All rights reserved.
             </Typography>
