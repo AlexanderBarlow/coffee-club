@@ -1,6 +1,12 @@
 import { PrismaClient } from "@prisma/client";
+import { createClient } from "@supabase/supabase-js";
+import "dotenv/config";
 
 const prisma = new PrismaClient();
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 export default async function main() {
   console.log("🌱 Seeding roles...");
@@ -21,47 +27,40 @@ export default async function main() {
 
   const usersToSeed = [
     {
-      id: "8436fd35-9b2d-44cc-92b2-c3e47d467297",
       email: "admin@coffeeclub.com",
       role: "ADMIN",
       employeeNumber: "CFA001",
       storeNumber: "0021",
     },
     {
-      id: "b2b8e63e-a32a-44c0-a5a5-d4f75842e1dd",
       email: "barista@coffeeclub.com",
       role: "BARISTA",
       employeeNumber: "CFA002",
       storeNumber: "0021",
     },
     {
-      id: "cdf78a0b-2cbb-4f89-8897-3a8a6f4e8d11",
       email: "manager@coffeeclub.com",
       role: "MANAGER",
       employeeNumber: "CFA003",
       storeNumber: "0021",
     },
     {
-      id: "58a4b33d-d3e2-45c3-b9f2-9fd0b0c6930d",
       email: "supervisor@coffeeclub.com",
       role: "SUPERVISOR",
       employeeNumber: "CFA004",
       storeNumber: "0021",
     },
     {
-      id: "test-user-id-0001",
       email: "testuser@coffeeclub.com",
       role: "USER",
     },
     {
-      id: "extra-barista-1",
       email: "barista2@coffeeclub.com",
       role: "BARISTA",
       employeeNumber: "CFA005",
       storeNumber: "0022",
     },
     {
-      id: "extra-manager-1",
       email: "manager2@coffeeclub.com",
       role: "MANAGER",
       employeeNumber: "CFA006",
@@ -70,10 +69,24 @@ export default async function main() {
   ];
 
   for (const user of usersToSeed) {
-    await prisma.user.upsert({
-      where: { id: user.id },
-      update: {
+    try {
+      await supabaseAdmin.auth.admin.createUser({
         email: user.email,
+        password: "password123!",
+        email_confirm: true,
+      });
+      console.log(`✅ Supabase user created: ${user.email}`);
+    } catch (e) {
+      if (e instanceof Error && e.message.includes("already been registered")) {
+        console.log(`⚠️ Supabase user already exists: ${user.email}`);
+      } else {
+        throw e;
+      }
+    }
+
+    await prisma.user.upsert({
+      where: { email: user.email },
+      update: {
         tier: "VIP",
         points: 999,
         roleId: roles[user.role],
@@ -81,7 +94,6 @@ export default async function main() {
         storeNumber: user.storeNumber,
       },
       create: {
-        id: user.id,
         email: user.email,
         tier: "VIP",
         points: 999,
@@ -94,8 +106,8 @@ export default async function main() {
     console.log(`✅ Created or updated ${user.role} user: ${user.email}`);
   }
 
-  const baristaId = usersToSeed.find((u) => u.role === "BARISTA").id;
-  const testUserId = usersToSeed.find((u) => u.role === "USER").id;
+  const barista = await prisma.user.findFirst({ where: { email: "barista@coffeeclub.com" } });
+  const testUser = await prisma.user.findFirst({ where: { email: "testuser@coffeeclub.com" } });
 
   const payrollDates = [
     { start: "2024-05-01", end: "2024-05-15" },
@@ -106,7 +118,7 @@ export default async function main() {
   for (const { start, end } of payrollDates) {
     await prisma.payroll.create({
       data: {
-        userId: baristaId,
+        userId: barista.id,
         hoursWorked: 80,
         hourlyRate: 15,
         totalPay: 1200,
@@ -121,7 +133,7 @@ export default async function main() {
 
       await prisma.shift.create({
         data: {
-          userId: baristaId,
+          userId: barista.id,
           startTime: new Date(shiftDate.setHours(8, 0, 0)),
           endTime: new Date(shiftDate.setHours(16, 0, 0)),
           roleAtTime: "BARISTA",
@@ -141,7 +153,7 @@ export default async function main() {
 
   await prisma.customerActivity.create({
     data: {
-      userId: baristaId,
+      userId: barista.id,
       action: "review_submitted",
       detail: "5 stars for Caramel Latte",
     },
@@ -149,7 +161,7 @@ export default async function main() {
 
   await prisma.rewardRedemption.create({
     data: {
-      userId: baristaId,
+      userId: barista.id,
       rewardName: "Free Coffee",
       pointsUsed: 100,
     },
@@ -157,7 +169,7 @@ export default async function main() {
 
   const order = await prisma.order.create({
     data: {
-      userId: testUserId,
+      userId: testUser.id,
       stripeSessionId: "test-session-001",
       items: [{ name: "Iced Mocha", quantity: 1, price: 5.5 }],
       total: 5.5,
@@ -168,7 +180,7 @@ export default async function main() {
 
   await prisma.review.create({
     data: {
-      userId: testUserId,
+      userId: testUser.id,
       orderId: order.id,
       rating: 5,
       comment: "Amazing drink and fast service!",

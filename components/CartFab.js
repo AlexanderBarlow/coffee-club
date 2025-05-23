@@ -50,7 +50,7 @@ export default function CartFab() {
     return null;
 
   return (
-    <Box sx={{ position: "fixed", bottom: 20, right: 20, zIndex: 9999 }}>
+    <Box sx={{ position: "fixed", bottom: 20, right: 20, zIndex: 9999, paddingBottom: 0 }}>
       <Box
         onClick={() => setOpen((prev) => !prev)}
         sx={{ position: "relative" }}
