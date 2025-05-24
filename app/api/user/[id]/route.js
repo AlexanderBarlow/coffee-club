@@ -1,11 +1,10 @@
+// /app/api/user/[id]/route.js
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function GET(req) {
-  const url = new URL(req.url);
-  const segments = url.pathname.split("/");
-  const id = segments[segments.length - 1]; // safely gets [id] from the path
+export async function GET(req, { params }) {
+  const { id } = await params;
 
   try {
     const user = await prisma.user.findUnique({

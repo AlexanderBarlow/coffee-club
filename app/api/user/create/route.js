@@ -6,22 +6,29 @@ export async function POST(req) {
   try {
     const body = await req.json();
 
-    // Find the default USER role
+    // Ensure role exists
     const defaultRole = await prisma.role.findUnique({
-      where: { name: "USER" }, // assumes role table is pre-seeded
+      where: { name: "USER" },
     });
 
     if (!defaultRole) {
-      console.error("❌ Default USER role not found.");
       return new Response(JSON.stringify({ error: "USER role missing" }), {
         status: 500,
       });
     }
 
-    const user = await prisma.user.upsert({
-      where: { id: body.id },
-      update: {}, // You can modify fields if needed here
-      create: {
+    // 🔍 Check if user already exists by email
+    const existingUser = await prisma.user.findUnique({
+      where: { email: body.email },
+    });
+
+    if (existingUser) {
+      return new Response(JSON.stringify(existingUser), { status: 200 });
+    }
+
+    // ✅ Create new user
+    const newUser = await prisma.user.create({
+      data: {
         id: body.id,
         email: body.email,
         tier: "BRONZE",
@@ -32,7 +39,7 @@ export async function POST(req) {
       },
     });
 
-    return new Response(JSON.stringify(user), { status: 200 });
+    return new Response(JSON.stringify(newUser), { status: 201 });
   } catch (error) {
     console.error("❌ User creation failed:", error);
     return new Response(JSON.stringify({ error: error.message }), {

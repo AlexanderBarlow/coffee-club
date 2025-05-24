@@ -70,44 +70,59 @@ export default function AuthForm({ type }) {
     e.preventDefault();
     setError("");
 
-    try {
-      if (type === "signup") {
-        await supabase.auth.signOut();
-        const { data, error } = await supabase.auth.signUp({ email, password });
+    if (type === "signup") {
+      await supabase.auth.signOut();
+      const { data, error } = await supabase.auth.signUp({ email, password });
 
-        if (error) return setError(error.message);
-        if (data?.user) {
-          await createUserIfNotExists(data.user.id, data.user.email);
+      if (error) return setError(error.message);
+      if (data?.user) {
+        const res = await fetch("/api/user/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: data.user.id, email: data.user.email }),
+        });
+
+        if (!res.ok) {
+          const msg = await res.json();
+          return setError(msg.error || "Failed to create user in DB");
         }
 
         return router.push("/verify");
       }
-
+    } else {
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) return setError(error.message);
+      const userId = authData?.user?.id;
 
-      const userId = authData.user?.id;
+      // ✅ Always try to create the user in Prisma (if it already exists, fine)
+      const res = await fetch("/api/user/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: userId, email }),
+      });
 
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      const res = await fetch(`/api/user/${userId}`);
       if (!res.ok) {
-        await supabase.auth.signOut();
-        setError("User record not found in database.");
-        return;
+        const { error: apiError } = await res.json();
+        return setError(apiError || "User creation failed.");
       }
 
-      const dbUser = await res.json();
+      // ✅ Now safely fetch the DB user
+      const userRes = await fetch(`/api/user/${userId}`);
+      if (!userRes.ok) {
+        await supabase.auth.signOut();
+        return setError("User record not found in database.");
+      }
+
+      const dbUser = await userRes.json();
       const role = dbUser?.role?.name;
 
       if (!role) {
         await supabase.auth.signOut();
-        setError("No role found for this user.");
-        return;
+        return setError("No role found for this user.");
       }
 
       if (["ADMIN", "MANAGER", "SUPERVISOR"].includes(role)) {
@@ -115,11 +130,9 @@ export default function AuthForm({ type }) {
       } else {
         router.push("/dashboard");
       }
-    } catch (err) {
-      console.error("Unexpected error:", err);
-      setError("Something went wrong. Please try again.");
     }
   };
+
 
   if (checkingSession) {
     return (

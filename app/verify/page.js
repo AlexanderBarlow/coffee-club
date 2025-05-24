@@ -6,13 +6,12 @@ import { Typography, Box, CircularProgress } from "@mui/material";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function VerifyPage() {
-  const router = useRouter();
+	const router = useRouter();
 
-  useEffect(() => {
+	useEffect(() => {
 		const interval = setInterval(async () => {
 			console.log("🔄 Polling for session...");
 
-			// Force session refresh to get latest status
 			await supabase.auth.refreshSession();
 
 			const {
@@ -57,22 +56,30 @@ export default function VerifyPage() {
 		return () => clearInterval(interval);
 	}, [router]);
 
+	return (
+		<Box
+			sx={{
+				maxWidth: 500,
+				mx: "auto",
+				mt: 12,
+				px: 3,
+				textAlign: "center",
+				color: "#6f4e37",
+			}}
+		>
+			<Typography variant="h4" fontWeight={700} gutterBottom>
+				Confirm Your Email 📬
+			</Typography>
 
+			<Typography variant="body1" sx={{ mt: 2, fontWeight: 500 }}>
+				We’ve sent you an email to verify your account.
+				<br />
+				Once you confirm, you’ll be redirected to your dashboard.
+			</Typography>
 
-  return (
-    <Box sx={{ maxWidth: 500, mx: "auto", mt: 10, px: 2, textAlign: "center" }}>
-      <Typography variant="h5" gutterBottom>
-        Confirm Your Email 📬
-      </Typography>
-      <Typography variant="body1" sx={{ mt: 2 }}>
-        We’ve sent you an email to verify your account.
-        <br />
-        Once you confirm, this page will automatically redirect you to your
-        dashboard.
-      </Typography>
-      <Box sx={{ mt: 5 }}>
-        <CircularProgress />
-      </Box>
-    </Box>
-  );
+			<Box sx={{ mt: 5 }}>
+				<CircularProgress sx={{ color: "#6f4e37" }} />
+			</Box>
+		</Box>
+	);
 }
