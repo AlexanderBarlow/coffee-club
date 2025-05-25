@@ -1,3 +1,4 @@
+// components/admin/AdminLayout.jsx
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
@@ -20,31 +21,42 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-
-import MenuIcon from "@mui/icons-material/Menu";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
-import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
-import CoffeeIcon from "@mui/icons-material/LocalCafe";
-import AddBoxIcon from "@mui/icons-material/AddBox";
-import CategoryIcon from "@mui/icons-material/Category";
-import PeopleIcon from "@mui/icons-material/People";
-import LogoutIcon from "@mui/icons-material/Logout";
-import GroupsIcon from "@mui/icons-material/Groups";
+import {
+  Menu as MenuIcon,
+  Dashboard as DashboardIcon,
+  ReceiptLong as ReceiptLongIcon,
+  ConfirmationNumber as ConfirmationNumberIcon,
+  LocalCafe as CoffeeIcon,
+  AddBox as AddBoxIcon,
+  Category as CategoryIcon,
+  People as PeopleIcon,
+  Logout as LogoutIcon,
+  Groups as GroupsIcon,
+} from "@mui/icons-material";
 
 import { supabase } from "@/lib/supabaseClient";
 
-const drawerWidth = 240;
+const drawerWidth = 280;
+const blurBg = "rgba(255, 255, 255, 0.6)";
 
 const menuItems = [
   { label: "Home", icon: <DashboardIcon />, route: "/admin" },
   { label: "Orders", icon: <ReceiptLongIcon />, route: "/admin/orders" },
-  { label: "Tickets", icon: <ConfirmationNumberIcon />, route: "/admin/orders/ticket" },
+  {
+    label: "Tickets",
+    icon: <ConfirmationNumberIcon />,
+    route: "/admin/orders/ticket",
+  },
   { label: "Menu Editor", icon: <CoffeeIcon />, route: "/admin/menu/edit" },
   { label: "Add Item", icon: <AddBoxIcon />, route: "/admin/menu/add-drink" },
-  { label: "Add Category", icon: <CategoryIcon />, route: "/admin/menu/add-category" },
+  {
+    label: "Add Category",
+    icon: <CategoryIcon />,
+    route: "/admin/menu/add-category",
+  },
   { label: "Staff", icon: <PeopleIcon />, route: "/admin/staff" },
   { label: "Users", icon: <GroupsIcon />, route: "/admin/users" },
+  { label: "Payroll", icon: <GroupsIcon />, route: "/admin/payroll" },
 ];
 
 export default function AdminLayout({ children }) {
@@ -55,35 +67,36 @@ export default function AdminLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const handleDrawerToggle = () => setMobileOpen((prev) => !prev);
-
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    async function checkAuth() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
       if (!session) return router.push("/login");
-
-      const { data: userData } = await supabase.auth.getUser();
-      const user = userData?.user;
-      if (!user?.email || !user.email.includes("@")) {
-        router.push("/login");
-      } else {
-        setLoading(false);
-      }
-    };
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user?.email?.includes("@")) return router.push("/login");
+      setLoading(false);
+    }
     checkAuth();
   }, [router]);
 
   if (loading) return null;
 
+  const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
+
   const drawerContent = (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <Toolbar />
+      <Toolbar sx={{ justifyContent: "center" }}>
+        <Typography variant="h6" fontWeight={700} color="#6f4e37">
+          Admin Menu
+        </Typography>
+      </Toolbar>
       <Divider />
       <List sx={{ flexGrow: 1 }}>
         {menuItems.map((item) => {
@@ -93,29 +106,52 @@ export default function AdminLayout({ children }) {
               : pathname.startsWith(item.route);
 
           return (
-            <ListItem key={item.label} disablePadding>
-              <Tooltip title={item.label} placement="right">
+            <ListItem key={item.label} disablePadding sx={{ mb: 1 }}>
+              <Tooltip title={item.label} placement="right" arrow>
                 <ListItemButton
                   onClick={() => router.push(item.route)}
                   sx={{
-                    backgroundColor: isActive ? "#fdece2" : "transparent",
-                    "&:hover": {
-                      backgroundColor: "#fddcc0",
-                    },
-                    borderLeft: isActive ? "4px solid #6f4e37" : "4px solid transparent",
+                    borderRadius: 3,
+                    mb: 0.5,
                     px: 2,
-                    py: 1.2,
+                    py: 1.5,
+                    background: isActive
+                      ? `linear-gradient(135deg, rgba(111,78,55,0.15) 0%, rgba(111,78,55,0.05) 100%)`
+                      : "transparent",
+                    backdropFilter: isActive ? "blur(4px)" : "none",
+                    borderLeft: isActive
+                      ? `3px solid ${theme.palette.primary.light}`
+                      : "3px solid transparent",
+                    "&:hover": {
+                      background: isActive
+                        ? `linear-gradient(135deg, rgba(111,78,55,0.18) 0%, rgba(111,78,55,0.08) 100%)`
+                        : `rgba(111,78,55,0.04)`,
+                    },
                   }}
                 >
-                  <ListItemIcon sx={{ color: "#6f4e37", minWidth: 36 }}>
-                    {item.icon}
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    <Box
+                      sx={{
+                        background: isActive
+                          ? theme.palette.primary.light
+                          : blurBg,
+                        borderRadius: "50%",
+                        p: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: isActive ? "#fff" : theme.palette.text.primary,
+                      }}
+                    >
+                      {item.icon}
+                    </Box>
                   </ListItemIcon>
                   <ListItemText
                     primary={item.label}
                     primaryTypographyProps={{
                       fontSize: "0.95rem",
-                      fontWeight: 500,
-                      color: "#3e3028",
+                      fontWeight: 600,
+                      color: isActive ? theme.palette.primary.light : "#3e3028",
                     }}
                   />
                 </ListItemButton>
@@ -125,44 +161,63 @@ export default function AdminLayout({ children }) {
         })}
       </List>
       <Divider />
-      <Box sx={{ p: 1 }}>
+      <Box sx={{ p: 2 }}>
         <ListItemButton
           onClick={async () => {
             await supabase.auth.signOut();
             router.push("/login");
           }}
           sx={{
-            borderRadius: 2,
-            backgroundColor: "#fdece2",
-            "&:hover": { backgroundColor: "#fdd4b0" },
+            borderRadius: 3,
+            background: `linear-gradient(135deg, rgba(111,78,55,0.15) 0%, rgba(111,78,55,0.05) 100%)`,
+            backdropFilter: "blur(4px)",
+            "&:hover": {
+              background: `linear-gradient(135deg, rgba(111,78,55,0.18) 0%, rgba(111,78,55,0.08) 100%)`,
+            },
+            p: 1.5,
           }}
         >
-          <ListItemIcon sx={{ color: "#9e6f50" }}>
-            <LogoutIcon />
+          <ListItemIcon sx={{ minWidth: 40 }}>
+            <Box
+              sx={{
+                background: theme.palette.error.light,
+                borderRadius: "50%",
+                p: 1,
+                color: "#fff",
+              }}
+            >
+              <LogoutIcon />
+            </Box>
           </ListItemIcon>
-          <ListItemText primary="Logout" />
+          <ListItemText
+            primary="Logout"
+            primaryTypographyProps={{ fontWeight: 600 }}
+          />
         </ListItemButton>
       </Box>
     </Box>
   );
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", backgroundColor: "#fdf8f4" }}>
+    <Box
+      sx={{ display: "flex", minHeight: "100vh", backgroundColor: "#fdf8f4" }}
+    >
       <CssBaseline />
 
       <AppBar
         position="fixed"
+        elevation={2}
         sx={{
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-          backgroundColor: "#6f4e37",
+          zIndex: theme.zIndex.drawer + 1,
+          background: "rgba(111, 78, 55, 0.85)",
+          backdropFilter: "blur(6px)",
         }}
       >
         <Toolbar sx={{ justifyContent: "space-between" }}>
           <Typography
             variant="h6"
-            fontWeight={700}
             noWrap
-            sx={{ fontSize: { xs: "1rem", sm: "1.25rem" } }}
+            sx={{ fontSize: { xs: "1rem", sm: "1.25rem" }, fontWeight: 700 }}
           >
             Coffee Club Admin
           </Typography>
@@ -172,14 +227,15 @@ export default function AdminLayout({ children }) {
             onClick={handleDrawerToggle}
             sx={{ display: { sm: "none" } }}
           >
-            <MenuIcon />
+            <MenuIcon fontSize="large" />
           </IconButton>
         </Toolbar>
       </AppBar>
 
-      {/* Navigation Drawer */}
-      <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
-        {/* Mobile Drawer */}
+      <Box
+        component="nav"
+        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+      >
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -190,14 +246,14 @@ export default function AdminLayout({ children }) {
             "& .MuiDrawer-paper": {
               width: drawerWidth,
               boxSizing: "border-box",
-              backgroundColor: "#fff",
+              background: blurBg,
+              backdropFilter: "blur(12px)",
             },
           }}
         >
           {drawerContent}
         </Drawer>
 
-        {/* Desktop Drawer */}
         <Drawer
           variant="permanent"
           sx={{
@@ -205,7 +261,8 @@ export default function AdminLayout({ children }) {
             "& .MuiDrawer-paper": {
               width: drawerWidth,
               boxSizing: "border-box",
-              backgroundColor: "#fff",
+              background: blurBg,
+              backdropFilter: "blur(12px)",
             },
           }}
           open
@@ -214,7 +271,6 @@ export default function AdminLayout({ children }) {
         </Drawer>
       </Box>
 
-      {/* Main Page Content */}
       <Box
         component="main"
         sx={{
