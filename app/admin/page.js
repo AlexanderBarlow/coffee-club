@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import { SalesTrendGraph } from "@/components/admin/SalesTrendGraph";
-import { PayrollVsRevenue } from "@/components/admin/PayrollVsRevenue";
+import { PayrollVsRevenue } from "@/components/admin/PayrollvsRevenue";
 import { EmployeeRolesChart } from "@/components/admin/EmployeeRolesChart";
 import { TopItemsChart } from "@/components/admin/TopItemsChart";
 import { LaborHoursChart } from "@/components/admin/LaborHoursChart";

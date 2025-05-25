@@ -1,133 +1,102 @@
+// context/OrderStatusContext.js
 "use client";
 
-import { createContext, useContext, useEffect, useState, useRef } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 const OrderStatusContext = createContext();
 
+/** Wrap your app (in layout.js) with this provider */
 export function OrderStatusProvider({ children }) {
-    const [status, setStatus] = useState(null);
-    const [orderId, setOrderId] = useState(null);
-    const [userId, setUserId] = useState(null);
+  const [status, setStatus] = useState(null);
+  const [orderId, setOrderId] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const prev = useRef({ id: null, status: null });
 
-    const previousOrderId = useRef(null);
-    const previousStatus = useRef(null);
+  // 1) Listen for auth changes
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_, session) => {
+      if (session?.user?.id) setUserId(session.user.id);
+      else {
+        setUserId(null);
+        setStatus(null);
+        setOrderId(null);
+        prev.current = { id: null, status: null };
+      }
+    });
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user?.id) setUserId(data.session.user.id);
+    });
+    return () => sub.unsubscribe();
+  }, []);
 
-    useEffect(() => {
-        const { data: subscription } = supabase.auth.onAuthStateChange(
-            async (_event, session) => {
-                if (session?.user?.id) {
-                    setUserId(session.user.id);
-                } else {
-                    setUserId(null);
-                    setStatus(null);
-                    setOrderId(null);
-                    previousOrderId.current = null;
-                    previousStatus.current = null;
-                }
-            }
+  // 2) Fetch + subscribe to order updates
+  useEffect(() => {
+    if (!userId) return;
+    let active = true;
+
+    const setOrderState = (o) => {
+      if (!active) return;
+      const changed =
+        o.id !== prev.current.id || o.status !== prev.current.status;
+      if (!changed) return;
+      prev.current = { id: o.id, status: o.status };
+
+      if (o.status === "COMPLETED" && !o.stored) {
+        setStatus("COMPLETED");
+        setOrderId(o.id);
+      } else if (["PENDING", "IN_PROGRESS"].includes(o.status)) {
+        setStatus(o.status);
+        setOrderId(o.id);
+      } else {
+        setStatus(null);
+        setOrderId(null);
+      }
+    };
+
+    // initial fetch
+    (async () => {
+      try {
+        const res = await fetch(`/api/user/${userId}/orders`);
+        const json = await res.json();
+        const orders = Array.isArray(json) ? json : json.orders || [];
+        const latest = orders.find((o) =>
+          ["PENDING", "IN_PROGRESS", "COMPLETED"].includes(o.status)
         );
+        if (latest) setOrderState(latest);
+      } catch (e) {
+        console.error("fetch orders failed:", e);
+      }
+    })();
 
+    // realtime channel
+    const chan = supabase
+      .channel(`order-status-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "orders",
+          filter: `user_id=eq.${userId}`,
+        },
+        ({ new: updated }) => setOrderState(updated)
+      )
+      .subscribe();
 
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session?.user?.id) {
-                setUserId(session.user.id);
-            }
-        });
+    return () => {
+      active = false;
+      supabase.removeChannel(chan);
+    };
+  }, [userId]);
 
-        return () => {
-            subscription.unsubscribe();
-        };
-    }, []);
-
-    useEffect(() => {
-        if (!userId) return;
-        let active = true;
-
-        const setOrderState = (order) => {
-            const { id, status, stored } = order;
-
-            if (!active) return;
-
-            const changed =
-                id !== previousOrderId.current || status !== previousStatus.current;
-
-            if (!changed) return;
-
-            previousOrderId.current = id;
-            previousStatus.current = status;
-
-            if (status === "COMPLETED" && stored === false) {
-                setStatus("COMPLETED");
-                setOrderId(id);
-                return;
-            }
-
-            if (["PENDING", "IN_PROGRESS"].includes(status)) {
-                setStatus(status);
-                setOrderId(id);
-            } else {
-                setStatus(null);
-                setOrderId(null);
-            }
-        };
-
-        const fetchOrders = async () => {
-            try {
-                const res = await fetch(`/api/user/${userId}/orders`);
-                const data = await res.json();
-                const orders = Array.isArray(data) ? data : data?.orders;
-
-                if (!Array.isArray(orders)) return;
-
-                const latest = orders.find((o) =>
-                    ["PENDING", "IN_PROGRESS", "COMPLETED"].includes(o.status)
-                );
-
-                if (latest) setOrderState(latest);
-                else {
-                    setStatus(null);
-                    setOrderId(null);
-                }
-            } catch (err) {
-                console.error("Failed to fetch orders:", err);
-            }
-        };
-
-        fetchOrders();
-        const interval = setInterval(fetchOrders, 10000);
-
-        const channel = supabase
-            .channel("order-status")
-            .on(
-                "postgres_changes",
-                {
-                    event: "UPDATE",
-                    schema: "public",
-                    table: "orders",
-                    filter: `user_id=eq.${userId}`,
-                },
-                (payload) => {
-                    const updated = payload.new;
-                    setOrderState(updated);
-                }
-            )
-            .subscribe();
-
-        return () => {
-            active = false;
-            clearInterval(interval);
-            supabase.removeChannel(channel);
-        };
-    }, [userId]);
-
-    return (
-        <OrderStatusContext.Provider value={{ status, orderId }}>
-            {children}
-        </OrderStatusContext.Provider>
-    );
+  return (
+    <OrderStatusContext.Provider value={{ status, orderId }}>
+      {children}
+    </OrderStatusContext.Provider>
+  );
 }
 
 export function useOrderStatus() {
-    return useContext(OrderStatusContext);
+  return useContext(OrderStatusContext);
 }

@@ -1,72 +1,43 @@
+// components/admin/payroll/PayrollPage.jsx
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  Stack,
-  TextField,
-  Button,
-  CircularProgress,
-  useTheme,
-  useMediaQuery,
-  Paper,
-} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Box } from "@mui/material";
+import { PayrollHeader } from "@/components/admin/PayrollHeader";
+import { PayrollList } from "@/components/admin/PayrollList";
 
 export default function PayrollPage() {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [payLoading, setPayLoading] = useState(false);
   const [editState, setEditState] = useState({});
+  const [savingState, setSavingState] = useState({});
 
-  const fetchPayroll = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/admin/payroll", { cache: "no-store" });
-      const json = await res.json();
-      setData(json);
-    } catch (err) {
-      console.error("Error fetching payroll:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Fetch payroll on mount
   useEffect(() => {
-    fetchPayroll();
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/admin/payroll", { cache: "no-store" });
+        const json = await res.json();
+        setData(json);
+      } catch (err) {
+        console.error("Error fetching payroll:", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
-  const handleFieldChange = (id, field, value) => {
-    setData((d) => d.map((u) => (u.id === id ? { ...u, [field]: value } : u)));
-    setEditState((e) => ({ ...e, [id]: true }));
-  };
-
-  const handleSave = async (id) => {
-    const user = data.find((u) => u.id === id);
-    try {
-      await fetch(`/api/admin/payroll/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          hoursWorked: parseFloat(user.hoursWorked),
-          hourlyRate: parseFloat(user.hourlyRate),
-        }),
-      });
-      setEditState((e) => ({ ...e, [id]: false }));
-      fetchPayroll();
-    } catch (err) {
-      console.error("Error saving payroll:", err);
-    }
-  };
-
+  // Simulate pay action reloads all
   const handleSimulatePay = async () => {
     setPayLoading(true);
     try {
       await fetch("/api/admin/payroll", { method: "POST" });
-      fetchPayroll();
+      // full reload
+      const res = await fetch("/api/admin/payroll", { cache: "no-store" });
+      const json = await res.json();
+      setData(json);
     } catch (err) {
       console.error("Error simulating pay:", err);
     } finally {
@@ -74,85 +45,53 @@ export default function PayrollPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <Box textAlign="center" mt={6}>
-        <CircularProgress />
-      </Box>
+  // Handle inline edits and save only that row
+  const handleFieldChange = (id, field, value) => {
+    setData((prev) =>
+      prev.map((u) => (u.id === id ? { ...u, [field]: Number(value) } : u))
     );
-  }
+    setEditState((prev) => ({ ...prev, [id]: true }));
+  };
+
+  const handleSave = async (id) => {
+    const user = data.find((u) => u.id === id);
+    setSavingState((prev) => ({ ...prev, [id]: true }));
+    try {
+      const res = await fetch(`/api/admin/payroll/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hoursWorked: user.hoursWorked,
+          hourlyRate: user.hourlyRate,
+        }),
+      });
+      const updated = await res.json();
+      // update only this record locally
+      setData((prev) =>
+        prev.map((u) => (u.id === id ? { ...u, ...updated } : u))
+      );
+      setEditState((prev) => ({ ...prev, [id]: false }));
+    } catch (err) {
+      console.error("Error saving payroll:", err);
+    } finally {
+      setSavingState((prev) => ({ ...prev, [id]: false }));
+    }
+  };
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1200, mx: "auto" }}>
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={4}
-      >
-        <Typography
-          variant={isMobile ? "h5" : "h4"}
-          fontWeight={700}
-          color="#6f4e37"
-        >
-          🕑 Payroll Management
-        </Typography>
-        <Button
-          variant="contained"
-          onClick={handleSimulatePay}
-          disabled={payLoading}
-        >
-          {payLoading ? "Processing..." : "Simulate Pay"}
-        </Button>
-      </Stack>
-
-      <Stack spacing={3}>
-        {data.map((user) => (
-          <Paper key={user.id} sx={{ p: 3 }} elevation={2}>
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={2}
-              alignItems="center"
-            >
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="h6">{user.email}</Typography>
-              </Box>
-              <TextField
-                label="Hours Worked"
-                type="number"
-                value={user.hoursWorked}
-                onChange={(e) =>
-                  handleFieldChange(user.id, "hoursWorked", e.target.value)
-                }
-                size="small"
-                sx={{ width: 120 }}
-              />
-              <TextField
-                label="Hourly Rate"
-                type="number"
-                value={user.hourlyRate}
-                onChange={(e) =>
-                  handleFieldChange(user.id, "hourlyRate", e.target.value)
-                }
-                size="small"
-                sx={{ width: 120 }}
-              />
-              <TextField
-                label="Pay Due"
-                value={(user.hoursWorked * user.hourlyRate).toFixed(2)}
-                size="small"
-                sx={{ width: 120 }}
-                InputProps={{ readOnly: true }}
-              />
-              {editState[user.id] && (
-                <Button variant="outlined" onClick={() => handleSave(user.id)}>
-                  Save
-                </Button>
-              )}
-            </Stack>
-          </Paper>
-        ))}
-      </Stack>
+      <PayrollHeader
+        payLoading={payLoading}
+        onSimulatePay={handleSimulatePay}
+      />
+      <PayrollList
+        data={data}
+        loading={loading}
+        savingState={savingState}
+        editState={editState}
+        onFieldChange={handleFieldChange}
+        onSave={handleSave}
+      />
     </Box>
   );
 }

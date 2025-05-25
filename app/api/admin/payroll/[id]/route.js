@@ -3,7 +3,10 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export async function PATCH(request, { params }) {
-  const userId = await params.id;
+  // params.id is available synchronously
+    const awaitParams = await params
+
+  const userId = awaitParams.id;
   if (!userId) {
     return new Response(JSON.stringify({ error: "Missing userId param." }), {
       status: 400,
@@ -15,33 +18,22 @@ export async function PATCH(request, { params }) {
   const hr = parseFloat(hourlyRate);
   const totalPay = hw * hr;
 
-  // Try to find the latest payroll record
+  // Find the latest payroll record
   const record = await prisma.payroll.findFirst({
     where: { userId },
     orderBy: { payPeriodStart: "desc" },
   });
-
-  if (record) {
-    // Update existing
-    const updated = await prisma.payroll.update({
-      where: { id: record.id },
-      data: { hoursWorked: hw, hourlyRate: hr, totalPay },
+  if (!record) {
+    return new Response(JSON.stringify({ error: "No payroll record found." }), {
+      status: 404,
     });
-    return new Response(JSON.stringify(updated), { status: 200 });
-  } else {
-    // Create new if none found
-    const now = new Date();
-    const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const newRecord = await prisma.payroll.create({
-      data: {
-        userId,
-        hoursWorked: hw,
-        hourlyRate: hr,
-        totalPay,
-        payPeriodStart: periodStart,
-        payPeriodEnd: now,
-      },
-    });
-    return new Response(JSON.stringify(newRecord), { status: 201 });
   }
+
+  // Update it in place
+  const updated = await prisma.payroll.update({
+    where: { id: record.id },
+    data: { hoursWorked: hw, hourlyRate: hr, totalPay },
+  });
+
+  return new Response(JSON.stringify(updated), { status: 200 });
 }
