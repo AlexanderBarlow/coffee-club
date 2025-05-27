@@ -3,85 +3,98 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export async function GET(request) {
-  const url = new URL(request.url);
-  const from = url.searchParams.get("from");
-  const to = url.searchParams.get("to");
-  const employee = url.searchParams.get("employee");
-  const search = url.searchParams.get("search")?.toLowerCase() || "";
+  const { searchParams } = new URL(request.url);
 
-  // Build Prisma "where" clause
-  const where = {};
-  if (from || to) {
-    where.payPeriodStart = {};
-    if (from) where.payPeriodStart.gte = new Date(from);
-    if (to) where.payPeriodEnd.lte = new Date(to);
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+  const employee = searchParams.get("employee");
+  const search = searchParams.get("search");
+
+  // 1) Build user filter (role + optional email‐search + optional specific user)
+  const userFilter = {
+    role: { name: { not: "USER" } },
+  };
+  if (search) {
+    userFilter.email = { contains: search, mode: "insensitive" };
   }
   if (employee && employee !== "all") {
-    where.userId = employee;
-  }
-  if (search) {
-    where.user = {
-      email: { contains: search, mode: "insensitive" },
-    };
+    userFilter.id = employee;
   }
 
-  // Fetch all matching payroll records, with user email
-  const records = await prisma.payroll.findMany({
-    where,
-    include: { user: { select: { id: true, email: true } } },
-    orderBy: { payPeriodStart: "desc" },
+  // 2) Build payroll‐record filter (date range)
+  const recordFilter = {};
+  if (from || to) {
+    recordFilter.payPeriodStart = {};
+    if (from) recordFilter.payPeriodStart.gte = new Date(from);
+    if (to) recordFilter.payPeriodStart.lte = new Date(to);
+  }
+
+  // 3) Fetch users with their latest matching payroll record
+  const users = await prisma.user.findMany({
+    where: userFilter,
+    include: {
+      payrollRecords: {
+        where: recordFilter,
+        orderBy: { payPeriodStart: "desc" },
+        take: 1,
+      },
+    },
+    orderBy: { email: "asc" },
   });
 
-  // 1) SUMMARY
-  const totalPaySum = records.reduce((sum, r) => sum + (r.totalPay || 0), 0);
-  const totalHoursSum = records.reduce(
-    (sum, r) => sum + (r.hoursWorked || 0),
-    0
-  );
-  const count = records.length;
+  // 4) Build periods array + running totals
+  const periods = [];
+  let totalPayroll = 0,
+    totalHours = 0,
+    totalOvertime = 0;
+
+  users.forEach((u) => {
+    const rec = u.payrollRecords[0];
+    const hours = rec?.hoursWorked ?? 0;
+    const overtime = rec?.overtimeHours ?? 0;
+    const pay = rec?.totalPay ?? 0;
+    const start = rec?.payPeriodStart?.toISOString() ?? "";
+    const end = rec?.payPeriodEnd?.toISOString() ?? "";
+    const status = pay > 0 ? "Pending" : "Paid";
+
+    periods.push({
+      id: u.id,
+      dateRange: start && end ? `${start} – ${end}` : "",
+      hours,
+      overtime,
+      totalPay: pay,
+      status,
+    });
+
+    totalPayroll += pay;
+    totalHours += hours;
+    totalOvertime += overtime;
+  });
+
+  // 5) Compute your summary KPIs
   const summary = {
-    totalPayroll: totalPaySum,
-    avgHours: count ? +(totalHoursSum / count).toFixed(1) : 0,
-    overtimePct: 0, // placeholder — compute if you track OT
-    pendingAdj: 0, // placeholder — compute if you add an Adjustment model
+    totalPayroll,
+    avgHours: users.length ? totalHours / users.length : 0,
+    overtimePct: users.length
+      ? Math.round((totalOvertime / totalHours) * 100)
+      : 0,
+    pendingAdj: periods.filter((p) => p.totalPay > 0).length,
   };
 
-  // 2) TREND DATA (group by YYYY-MM)
-  const trendMap = {};
-  records.forEach((r) => {
-    const key = r.payPeriodStart.toISOString().slice(0, 7); // "2025-05"
-    if (!trendMap[key]) trendMap[key] = { hours: 0, pay: 0 };
-    trendMap[key].hours += r.hoursWorked || 0;
-    trendMap[key].pay += r.totalPay || 0;
-  });
-  const trendData = Object.entries(trendMap).map(([period, vals]) => ({
-    period,
-    hours: vals.hours,
-    totalPay: vals.pay,
-  }));
-
-  // 3) PERIODS LIST
-  const periods = records.map((r, i) => ({
-    id: r.id,
-    period: i + 1,
-    dateRange: `${r.payPeriodStart.toISOString().split("T")[0]} – ${
-      r.payPeriodEnd.toISOString().split("T")[0]
-    }`,
-    totalPay: r.totalPay,
-    hours: r.hoursWorked,
-    status: r.totalPay > 0 ? "Unpaid" : "Paid",
-  }));
-
-  return new Response(JSON.stringify({ summary, trendData, periods }), {
-    status: 200,
-  });
+  return new Response(
+    JSON.stringify({ summary, periods }),
+    {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }
+  );
 }
 
 export async function POST() {
-  // Simulate pay: zero out all outstanding payroll
+  // Zero-out all outstanding payroll
   await prisma.payroll.updateMany({
     where: { totalPay: { gt: 0 } },
-    data: { hoursWorked: 0, totalPay: 0 },
+    data: { hoursWorked: 0, overtimeHours: 0, totalPay: 0 },
   });
   return new Response(JSON.stringify({ success: true }), { status: 200 });
 }

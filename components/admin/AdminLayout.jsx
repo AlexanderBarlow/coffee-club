@@ -5,34 +5,33 @@ import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Box,
-  Typography,
-  IconButton,
   CssBaseline,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Typography,
+  Drawer,
   List,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
   useMediaQuery,
-  Drawer,
-  AppBar,
-  Toolbar,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import {
   Menu as MenuIcon,
+  Logout as LogoutIcon,
   Dashboard as DashboardIcon,
   ReceiptLong as ReceiptLongIcon,
   ConfirmationNumber as ConfirmationNumberIcon,
+  AttachMoney as AttachMoneyIcon,
   LocalCafe as CoffeeIcon,
   AddBox as AddBoxIcon,
   Category as CategoryIcon,
   People as PeopleIcon,
   Groups as GroupsIcon,
-  AttachMoney as AttachMoneyIcon,
-  Logout as LogoutIcon,
 } from "@mui/icons-material";
-import { supabase } from "@/lib/supabaseClient";
 
 const menuItems = [
   { label: "Dashboard", icon: <DashboardIcon />, route: "/admin" },
@@ -63,113 +62,108 @@ export default function AdminLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Client‐side auth check
+  // Dummy auth-check
   useEffect(() => {
     (async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) return router.push("/login");
+      // await supabase.auth.getSession()...
       setLoading(false);
     })();
-  }, [router]);
+  }, []);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  if (loading) return null;
+
+  const handleLogout = () => {
+    // supabase.auth.signOut()...
     router.push("/login");
   };
 
-  const drawerWidth = isMobile ? 240 : 80;
-  const drawer = (
+  const drawerWidth = isMobile ? 240 : 200;
+  const frosted = {
+    bgcolor: "rgba(255,255,255,0.6)",
+    backdropFilter: "blur(12px)",
+    boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+  };
+
+  const drawerContent = (
     <Box
       sx={{
         width: drawerWidth,
-        bgcolor: "#fdebe0",
         height: "100%",
-        pt: 2,
-        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
+        py: 2,
+        ...frosted,
       }}
     >
       <Typography
-        variant="h6"
-        sx={{ mb: 2, textAlign: "center", color: "#6f4e37" }}
+        variant="h5"
+        align="center"
+        sx={{ mb: 3, color: "#6f4e37", fontWeight: 700 }}
       >
         ☕ Coffee Club
       </Typography>
       <List>
-        {menuItems.map(({ label, icon, route }, idx) => {
+        {menuItems.map(({ label, icon, route }) => {
           const active = pathname === route;
           return (
-            <ListItem key={idx} disablePadding>
+            <ListItem key={route} disablePadding sx={{ mb: 1 }}>
               <ListItemButton
                 onClick={() => {
                   router.push(route);
                   if (isMobile) setMobileOpen(false);
                 }}
                 sx={{
-                  py: 1,
-                  px: isMobile ? 2 : 0,
-                  justifyContent: isMobile ? "flex-start" : "center",
-                  bgcolor: active ? "rgba(111,78,55,0.2)" : "transparent",
-                  "&:hover": { bgcolor: "rgba(111,78,55,0.12)" },
+                  borderRadius: 2,
+                  mx: 1,
+                  px: isMobile ? 2 : 3,
+                  py: 1.5,
+                  background: active ? "rgba(111,78,55,0.15)" : "transparent",
+                  "&:hover": { background: "rgba(111,78,55,0.1)" },
+                  justifyContent: isMobile ? "flex-start" : "flex-start",
                 }}
               >
                 <ListItemIcon
                   sx={{
-                    color: active ? "#6f4e37" : "#a1887f",
-                    minWidth: 0,
-                    mr: isMobile ? 2 : 0,
-                    justifyContent: "center",
+                    color: active ? theme.palette.primary.main : "#555",
+                    minWidth: 40,
                   }}
                 >
-                  {React.cloneElement(icon, {
-                    fontSize: isMobile ? "medium" : "large",
-                  })}
+                  {React.cloneElement(icon, { fontSize: "medium" })}
                 </ListItemIcon>
-                {isMobile && (
-                  <ListItemText
-                    primary={label}
-                    primaryTypographyProps={{
-                      fontSize: "0.9rem",
-                      fontWeight: active ? 600 : 500,
-                      color: active ? "#6f4e37" : "inherit",
-                    }}
-                  />
-                )}
+
+                {/* Always show text now */}
+                <ListItemText
+                  primary={label}
+                  primaryTypographyProps={{
+                    fontSize: "1rem",
+                    fontWeight: active ? 600 : 500,
+                    color: active ? theme.palette.primary.main : "#333",
+                  }}
+                />
               </ListItemButton>
             </ListItem>
           );
         })}
       </List>
-
-      <Box sx={{ flexGrow: 1 }} />
-
       <ListItem disablePadding>
         <ListItemButton
           onClick={handleLogout}
           sx={{
-            py: 1,
-            px: isMobile ? 2 : 0,
-            justifyContent: isMobile ? "flex-start" : "center",
+            borderRadius: 2,
+            mx: 1,
+            px: 2,
+            py: 1.5,
+            background: "rgba(255,100,100,0.2)",
+            "&:hover": { background: "rgba(255,100,100,0.3)" },
           }}
         >
-          <ListItemIcon
-            sx={{
-              color: "#6f4e37",
-              minWidth: 0,
-              mr: isMobile ? 2 : 0,
-              justifyContent: "center",
-            }}
-          >
-            <LogoutIcon fontSize={isMobile ? "medium" : "large"} />
+          <ListItemIcon sx={{ color: "#c00", minWidth: 40 }}>
+            <LogoutIcon fontSize="medium" />
           </ListItemIcon>
           {isMobile && (
             <ListItemText
               primary="Logout"
-              primaryTypographyProps={{
-                fontSize: "0.9rem",
-                fontWeight: 500,
-              }}
+              primaryTypographyProps={{ fontSize: "1rem", fontWeight: 500 }}
             />
           )}
         </ListItemButton>
@@ -177,26 +171,41 @@ export default function AdminLayout({ children }) {
     </Box>
   );
 
-  if (loading) return null;
-
   return (
-    <Box sx={{ display: "flex", width: "100vw", height: "100vh" }}>
+    <Box
+      sx={{
+        display: "flex",
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden",
+      }}
+    >
       <CssBaseline />
 
       {isMobile ? (
         <>
-          <AppBar position="fixed" sx={{ bgcolor: "#6f4e37" }}>
+          <AppBar
+            position="fixed"
+            elevation={0}
+            sx={{
+              ...frosted,
+              borderBottom: "1px solid rgba(111,78,55,0.2)",
+            }}
+          >
             <Toolbar>
-              <IconButton
-                color="inherit"
-                edge="start"
-                onClick={() => setMobileOpen(true)}
-              >
-                <MenuIcon />
+              <IconButton edge="start" onClick={() => setMobileOpen(true)}>
+                <MenuIcon htmlColor="#6f4e37" />
               </IconButton>
-              <Box sx={{ flexGrow: 1 }} />
-              <IconButton color="inherit" onClick={handleLogout}>
-                <LogoutIcon />
+
+              <Typography
+                variant="h6"
+                sx={{ flexGrow: 1, textAlign: "center", color: "#6f4e37" }}
+              >
+                Coffee Club Admin
+              </Typography>
+
+              <IconButton onClick={handleLogout}>
+                <LogoutIcon htmlColor="#6f4e37" />
               </IconButton>
             </Toolbar>
           </AppBar>
@@ -206,27 +215,37 @@ export default function AdminLayout({ children }) {
             open={mobileOpen}
             onClose={() => setMobileOpen(false)}
             ModalProps={{ keepMounted: true }}
-            sx={{
-              "& .MuiDrawer-paper": {
-                boxSizing: "border-box",
-                width: drawerWidth,
-              },
-            }}
+            PaperProps={{ sx: frosted, width: drawerWidth }}
           >
-            {drawer}
+            {drawerContent}
           </Drawer>
 
           <Box
             component="main"
-            sx={{ flexGrow: 1, mt: 8, p: 2, overflow: "auto" }}
+            sx={{
+              flexGrow: 1,
+              mt: 8,
+              p: 2,
+              overflow: "auto",
+              bgcolor: "#f5f2ee",
+            }}
           >
             {children}
           </Box>
         </>
       ) : (
         <>
-          <Box sx={{ width: drawerWidth, flexShrink: 0 }}>{drawer}</Box>
-          <Box component="main" sx={{ flexGrow: 1, p: 6, overflow: "auto" }}>
+          <Box
+            component="nav"
+            sx={{ ...frosted, width: drawerWidth, flexShrink: 0 }}
+          >
+            {drawerContent}
+          </Box>
+
+          <Box
+            component="main"
+            sx={{ flexGrow: 1, p: 6, overflow: "auto", bgcolor: "#f5f2ee" }}
+          >
             {children}
           </Box>
         </>
