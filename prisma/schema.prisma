@@ -8,12 +8,12 @@ datasource db {
 }
 
 model User {
-  id             String  @id @default(uuid())
-  email          String  @unique
-  tier           Tier    @default(BRONZE)
-  points         Int     @default(0)
+  id             String   @id @default(uuid())
+  email          String   @unique
+  tier           Tier     @default(BRONZE)
+  points         Int      @default(0)
   roleId         String?
-  role           Role?   @relation(fields: [roleId], references: [id])
+  role           Role?    @relation(fields: [roleId], references: [id])
   employeeNumber String?
   storeNumber    String?
 
@@ -24,7 +24,7 @@ model User {
   activities     CustomerActivity[]
   redemptions    RewardRedemption[]
 
-  createdAt DateTime @default(now())
+  createdAt      DateTime @default(now())
 }
 
 model Role {
@@ -137,6 +137,24 @@ model Payroll {
   payPeriodStart DateTime
   payPeriodEnd   DateTime
   createdAt      DateTime @default(now())
+
+  // new roll-up fields
+  regularHours  Float    @default(0)
+  overtimeHours Float    @default(0)
+  overtimeRate  Float?   
+
+  // relation for any manual adjustments
+  adjustments   PayrollAdjustment[]
+}
+
+model PayrollAdjustment {
+  id         String          @id @default(uuid())
+  payroll    Payroll         @relation(fields: [payrollId], references: [id])
+  payrollId  String
+  type       AdjustmentType
+  amount     Float
+  note       String?
+  createdAt  DateTime        @default(now())
 }
 
 model Shift {
@@ -212,4 +230,9 @@ enum RoleName {
   BARISTA
   MANAGER
   SUPERVISOR
+}
+
+enum AdjustmentType {
+  BONUS
+  DEDUCTION
 }

@@ -1,208 +1,224 @@
+// prisma/seed.js
+
 import { PrismaClient } from "@prisma/client";
-import { createClient } from "@supabase/supabase-js";
 import "dotenv/config";
 
 const prisma = new PrismaClient();
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
-export default async function main() {
-  console.log("🌱 Seeding roles...");
-
+async function main() {
+  console.log("🌱 Seeding Roles…");
   const roleNames = ["ADMIN", "BARISTA", "MANAGER", "SUPERVISOR", "USER"];
   const roles = {};
-
   for (const name of roleNames) {
-    const role = await prisma.role.upsert({
+    const r = await prisma.role.upsert({
       where: { name },
       update: {},
       create: { name },
     });
-    roles[name] = role.id;
+    roles[name] = r.id;
   }
+  console.log("✅ Roles done.");
 
-  console.log("✅ Roles created.");
-
-  const usersToSeed = [
+  const usersData = [
     {
       email: "admin@coffeeclub.com",
       role: "ADMIN",
-      employeeNumber: "CFA001",
-      storeNumber: "0021",
+      empNum: "CFA001",
+      store: "0021",
     },
     {
       email: "barista@coffeeclub.com",
       role: "BARISTA",
-      employeeNumber: "CFA002",
-      storeNumber: "0021",
+      empNum: "CFA002",
+      store: "0021",
     },
     {
       email: "manager@coffeeclub.com",
       role: "MANAGER",
-      employeeNumber: "CFA003",
-      storeNumber: "0021",
+      empNum: "CFA003",
+      store: "0021",
     },
     {
       email: "supervisor@coffeeclub.com",
       role: "SUPERVISOR",
-      employeeNumber: "CFA004",
-      storeNumber: "0021",
-    },
-    {
-      email: "testuser@coffeeclub.com",
-      role: "USER",
+      empNum: "CFA004",
+      store: "0021",
     },
     {
       email: "barista2@coffeeclub.com",
       role: "BARISTA",
-      employeeNumber: "CFA005",
-      storeNumber: "0022",
+      empNum: "CFA005",
+      store: "0022",
     },
     {
       email: "manager2@coffeeclub.com",
       role: "MANAGER",
-      employeeNumber: "CFA006",
-      storeNumber: "0022",
+      empNum: "CFA006",
+      store: "0022",
     },
+    { email: "testuser@coffeeclub.com", role: "USER" },
   ];
 
-  for (const user of usersToSeed) {
-    try {
-      await supabaseAdmin.auth.admin.createUser({
-        email: user.email,
-        password: "password123!",
-        email_confirm: true,
-      });
-      console.log(`✅ Supabase user created: ${user.email}`);
-    } catch (e) {
-      if (e instanceof Error && e.message.includes("already been registered")) {
-        console.log(`⚠️ Supabase user already exists: ${user.email}`);
-      } else {
-        throw e;
-      }
-    }
-
+  console.log("🌱 Seeding Users…");
+  for (const u of usersData) {
     await prisma.user.upsert({
-      where: { email: user.email },
+      where: { email: u.email },
       update: {
+        roleId: roles[u.role],
+        employeeNumber: u.empNum,
+        storeNumber: u.store,
         tier: "VIP",
-        points: 999,
-        roleId: roles[user.role],
-        employeeNumber: user.employeeNumber,
-        storeNumber: user.storeNumber,
+        points: 500,
       },
       create: {
-        email: user.email,
+        email: u.email,
+        roleId: roles[u.role],
+        employeeNumber: u.empNum,
+        storeNumber: u.store,
         tier: "VIP",
-        points: 999,
-        roleId: roles[user.role],
-        employeeNumber: user.employeeNumber,
-        storeNumber: user.storeNumber,
+        points: 500,
       },
     });
-
-    console.log(`✅ Created or updated ${user.role} user: ${user.email}`);
+    console.log(`✅ ${u.email}`);
   }
 
-  const barista = await prisma.user.findFirst({ where: { email: "barista@coffeeclub.com" } });
-  const testUser = await prisma.user.findFirst({ where: { email: "testuser@coffeeclub.com" } });
+  // pick one barista to seed payroll for
+  const barista = await prisma.user.findUnique({
+    where: { email: "barista@coffeeclub.com" },
+  });
 
-  const payrollDates = [
-    { start: "2024-05-01", end: "2024-05-15" },
-    { start: "2024-05-16", end: "2024-05-31" },
-    { start: "2024-06-01", end: "2024-06-15" },
+  console.log("🌱 Seeding Payroll + Adjustments for the last 2 months…");
+  const payrollPeriods = [
+    { start: new Date("2025-04-01"), end: new Date("2025-04-15") },
+    { start: new Date("2025-04-16"), end: new Date("2025-04-30") },
+    { start: new Date("2025-05-01"), end: new Date("2025-05-15") },
+    { start: new Date("2025-05-16"), end: new Date("2025-05-31") },
   ];
 
-  for (const { start, end } of payrollDates) {
-    await prisma.payroll.create({
+  for (const period of payrollPeriods) {
+    // simulate some variation
+    const hrs = 80 + Math.floor(Math.random() * 16) - 8; // 72–88
+    const ot = hrs > 80 ? hrs - 80 : 0; // overtime above 80h
+    const reg = hrs - ot;
+    const rate = 15;
+    const otRate = 22.5; // 1.5×
+    const totalPay = reg * rate + ot * otRate;
+
+    const pr = await prisma.payroll.create({
       data: {
         userId: barista.id,
-        hoursWorked: 80,
-        hourlyRate: 15,
-        totalPay: 1200,
-        payPeriodStart: new Date(start),
-        payPeriodEnd: new Date(end),
+        hoursWorked: hrs,
+        regularHours: reg,
+        overtimeHours: ot,
+        hourlyRate: rate,
+        overtimeRate: otRate,
+        totalPay,
+        payPeriodStart: period.start,
+        payPeriodEnd: period.end,
       },
     });
 
-    for (let i = 0; i < 10; i++) {
-      const shiftDate = new Date(start);
-      shiftDate.setDate(shiftDate.getDate() + i);
-
-      await prisma.shift.create({
+    // add a bonus adjustment for every second period
+    if (Math.random() < 0.5) {
+      await prisma.payrollAdjustment.create({
         data: {
-          userId: barista.id,
-          startTime: new Date(shiftDate.setHours(8, 0, 0)),
-          endTime: new Date(shiftDate.setHours(16, 0, 0)),
-          roleAtTime: "BARISTA",
+          payrollId: pr.id,
+          type: "BONUS",
+          amount: 50,
+          note: "Performance bonus",
         },
       });
     }
+    // add a deduction for half the periods
+    if (Math.random() < 0.5) {
+      await prisma.payrollAdjustment.create({
+        data: {
+          payrollId: pr.id,
+          type: "DEDUCTION",
+          amount: 20,
+          note: "Uniform fee",
+        },
+      });
+    }
+
+    // create sample shifts for each day in that period
+    let cur = new Date(period.start);
+    while (cur <= period.end) {
+      const shiftStart = new Date(cur);
+      shiftStart.setHours(8, 0, 0);
+      const shiftEnd = new Date(cur);
+      shiftEnd.setHours(16, 0, 0);
+      await prisma.shift.create({
+        data: {
+          userId: barista.id,
+          startTime: shiftStart,
+          endTime: shiftEnd,
+          roleAtTime: "BARISTA",
+        },
+      });
+      cur.setDate(cur.getDate() + 1);
+    }
   }
 
-  await prisma.inventoryLog.create({
-    data: {
-      itemName: "Espresso Beans",
-      quantity: 10,
-      type: "restock",
-      note: "Monthly restock",
-    },
-  });
+  console.log("✅ Payroll + adjustments seeded.");
 
-  await prisma.customerActivity.create({
-    data: {
-      userId: barista.id,
-      action: "review_submitted",
-      detail: "5 stars for Caramel Latte",
-    },
-  });
-
-  await prisma.rewardRedemption.create({
-    data: {
-      userId: barista.id,
-      rewardName: "Free Coffee",
-      pointsUsed: 100,
-    },
+  console.log("🌱 Seeding sample orders & reviews…");
+  const testUser = await prisma.user.findUnique({
+    where: { email: "testuser@coffeeclub.com" },
   });
 
   const order = await prisma.order.create({
     data: {
       userId: testUser.id,
-      stripeSessionId: "test-session-001",
-      items: [{ name: "Iced Mocha", quantity: 1, price: 5.5 }],
-      total: 5.5,
+      stripeSessionId: "sess_1234",
+      items: [{ name: "Cappuccino", qty: 2, price: 4.5 }],
+      total: 9.0,
       status: "COMPLETED",
       paymentStatus: "PAID",
     },
   });
-
   await prisma.review.create({
     data: {
       userId: testUser.id,
       orderId: order.id,
       rating: 5,
-      comment: "Amazing drink and fast service!",
+      comment: "Best coffee in town!",
     },
   });
+  console.log("✅ Orders & reviews");
 
-  await prisma.storeMetricsSnapshot.create({
+  console.log("🌱 Seeding inventory & metrics…");
+  await prisma.inventoryLog.create({
     data: {
-      date: new Date(),
-      totalRevenue: 850,
-      totalOrders: 34,
-      averageOrderValue: 25,
-      totalLaborHours: 240,
+      itemName: "Coffee Beans",
+      quantity: 30,
+      type: "restock",
+      note: "Monthly restock",
     },
   });
+  await prisma.storeMetricsSnapshot.createMany({
+    data: [
+      {
+        date: new Date("2025-04-30"),
+        totalRevenue: 12000,
+        totalOrders: 400,
+        averageOrderValue: 30,
+        totalLaborHours: 320,
+      },
+      {
+        date: new Date("2025-05-31"),
+        totalRevenue: 15000,
+        totalOrders: 500,
+        averageOrderValue: 30,
+        totalLaborHours: 350,
+      },
+    ],
+  });
+  console.log("✅ Inventory & metrics");
 
-  console.log("📊 Admin metrics and test data seeded.");
+  console.log("🎉 Seed complete!");
 }
 
 main()
-  .catch((err) => {
-    console.error("❌ Error during seeding:", err);
-    process.exit(1);
-  })
+  .catch(console.error)
   .finally(() => prisma.$disconnect());
