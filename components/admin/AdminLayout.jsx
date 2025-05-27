@@ -42,13 +42,7 @@ const menuItems = [
     route: "/admin/orders/ticket",
   },
   { label: "Payroll", icon: <AttachMoneyIcon />, route: "/admin/payroll" },
-  { label: "Menu", icon: <CoffeeIcon />, route: "/admin/menu/edit" },
-  { label: "Add Item", icon: <AddBoxIcon />, route: "/admin/menu/add-drink" },
-  {
-    label: "Category",
-    icon: <CategoryIcon />,
-    route: "/admin/menu/add-category",
-  },
+  { label: "Manage Menu", icon: <CoffeeIcon />, route: "/admin/menu/" },
   { label: "Staff", icon: <PeopleIcon />, route: "/admin/staff" },
   { label: "Users", icon: <GroupsIcon />, route: "/admin/users" },
 ];
